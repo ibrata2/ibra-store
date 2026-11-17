@@ -1,0 +1,103 @@
+# IBRA STORE — رفع ملف من رابط (GitHub Releases أو أي رابط مباشر) إلى مواقع الرفع
+# تشتغل تلقائياً من لوحة الإدارة بالموقع (زر "رفع من رابط")
+name: mirror
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_url:  { description: "رابط الملف", required: true }
+      app_id:    { description: "معرّف التطبيق بالموقع", required: true }
+      platform:  { description: "المنصة", required: true, default: "windows" }
+      hosts:     { description: "المواقع (gdrive,gofile,catbox,pixeldrain,buzzheavier)", required: true, default: "gofile" }
+      site_url:  { description: "رابط الموقع", required: true }
+      file_name: { description: "اسم الملف (اختياري)", required: false, default: "" }
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: تنزيل الملف
+        env:
+          FILE_URL: ${{ inputs.file_url }}
+          FILE_NAME: ${{ inputs.file_name }}
+        run: |
+          set -e
+          NAME="$FILE_NAME"
+          if [ -z "$NAME" ]; then
+            NAME=$(python3 -c "import sys,urllib.parse as u;print(u.unquote(u.urlparse(sys.argv[1]).path.rstrip('/').split('/')[-1]) or 'file.bin')" "$FILE_URL")
+          fi
+          mkdir -p dl
+          curl -fL --retry 3 -o "dl/$NAME" "$FILE_URL"
+          echo "NAME=$NAME" >> $GITHUB_ENV
+          echo "SIZE=$(du -h "dl/$NAME" | cut -f1)" >> $GITHUB_ENV
+          ls -la dl
+
+      - name: تثبيت rclone (لـ Google Drive)
+        if: contains(inputs.hosts, 'gdrive')
+        run: curl -fsSL https://rclone.org/install.sh | sudo bash
+
+      - name: الرفع على المواقع
+        env:
+          HOSTS: ${{ inputs.hosts }}
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG }}
+          PIXELDRAIN_KEY: ${{ secrets.PIXELDRAIN_KEY }}
+          GDRIVE_FOLDER: ${{ vars.GDRIVE_FOLDER || 'IBRA-STORE' }}
+        run: |
+          F="dl/$NAME"
+          echo '[]' > links.json
+          ERRS=""
+          add() { jq --arg h "$1" --arg l "$2" --arg u "$3" '. += [{host:$h,label:$l,url:$u}]' links.json > t.json && mv t.json links.json; echo "✔ $2: $3"; }
+          fail() { ERRS="$ERRS $1;"; echo "✘ $1"; }
+
+          if [[ ",$HOSTS," == *",gofile,"* ]]; then
+            R=$(curl -s -F "file=@$F" https://upload.gofile.io/uploadfile)
+            U=$(echo "$R" | jq -r '.data.downloadPage // empty')
+            [ -n "$U" ] && add gofile "Gofile" "$U" || fail "gofile"
+          fi
+
+          if [[ ",$HOSTS," == *",catbox,"* ]]; then
+            U=$(curl -s -F "reqtype=fileupload" -F "fileToUpload=@$F" https://catbox.moe/user/api.php)
+            [[ "$U" == https://* ]] && add catbox "Catbox" "$U" || fail "catbox (الحد 200MB)"
+          fi
+
+          if [[ ",$HOSTS," == *",buzzheavier,"* ]]; then
+            ENC=$(python3 -c "import sys,urllib.parse as u;print(u.quote(sys.argv[1]))" "$NAME")
+            R=$(curl -s -T "$F" "https://w.buzzheavier.com/$ENC")
+            ID=$(echo "$R" | jq -r '.data.id // .id // empty' 2>/dev/null)
+            [ -n "$ID" ] && add buzzheavier "BuzzHeavier" "https://buzzheavier.com/$ID" || fail "buzzheavier"
+          fi
+
+          if [[ ",$HOSTS," == *",pixeldrain,"* ]]; then
+            if [ -z "$PIXELDRAIN_KEY" ]; then fail "pixeldrain (ما مضاف PIXELDRAIN_KEY)"; else
+              ENC=$(python3 -c "import sys,urllib.parse as u;print(u.quote(sys.argv[1]))" "$NAME")
+              R=$(curl -s -T "$F" -u ":$PIXELDRAIN_KEY" "https://pixeldrain.com/api/file/$ENC")
+              ID=$(echo "$R" | jq -r '.id // empty')
+              [ -n "$ID" ] && add pixeldrain "Pixeldrain" "https://pixeldrain.com/u/$ID" || fail "pixeldrain"
+            fi
+          fi
+
+          if [[ ",$HOSTS," == *",gdrive,"* ]]; then
+            if [ -z "$RCLONE_CONFIG_B64" ]; then fail "gdrive (ما مضاف RCLONE_CONFIG)"; else
+              mkdir -p ~/.config/rclone
+              echo "$RCLONE_CONFIG_B64" | base64 -d > ~/.config/rclone/rclone.conf 2>/dev/null || echo "$RCLONE_CONFIG_B64" > ~/.config/rclone/rclone.conf
+              REMOTE=$(rclone listremotes | head -n1)
+              if rclone copy "$F" "${REMOTE}${GDRIVE_FOLDER}" && U=$(rclone link "${REMOTE}${GDRIVE_FOLDER}/$NAME"); then
+                add gdrive "Google Drive" "$U"
+              else fail "gdrive"; fi
+            fi
+          fi
+
+          echo "ERRS=$ERRS" >> $GITHUB_ENV
+          cat links.json
+
+      - name: إرسال الروابط للموقع
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_PASSWORD }}
+          SITE: ${{ inputs.site_url }}
+          APP: ${{ inputs.app_id }}
+          PLATFORM: ${{ inputs.platform }}
+        run: |
+          BODY=$(jq -n --arg p "$PLATFORM" --arg s "$SIZE" --arg e "$ERRS" --slurpfile l links.json '{platform:$p,size:$s,errors:$e,links:$l[0]}')
+          curl -fsS -X POST "$SITE/api/admin/apps/$APP/links" \
+            -H "content-type: application/json" -H "x-admin-key: $ADMIN_KEY" -d "$BODY"
