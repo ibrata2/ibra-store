@@ -36,7 +36,34 @@ const IB = (() => {
     check: ico('<path d="m5 12 5 5L20 7"/>'),
     telegram: ico('<path d="M21 4 3 11l6 2 2 6 3-4 5 4z"/><path d="m9 13 8-6"/>'),
     tiktok: ico('<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.5 3 2.5 5 5.5 5"/>'),
+    palette: ico('<circle cx="13.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="17.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="6.5" cy="12.5" r="1.2" fill="currentColor"/><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 9 9 0 0 0-9-8z"/>'),
+    info: ico('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
   };
+
+  const THEMES = {
+    gold: ["الأصلي — ذهبي أسود", "sw-gold"],
+    "red-dark": ["أحمر زجاجي أسود", "sw-red-dark"],
+    "red-light": ["أحمر زجاجي أبيض", "sw-red-light"],
+    dark: ["دارك", "sw-dark"],
+    light: ["لايت", "sw-light"],
+  };
+  const applyTheme = (t) => { if (t && t !== "gold") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); };
+  const savedTheme = (key = "ib_theme") => { try { return localStorage.getItem(key); } catch { return null; } };
+  const setTheme = (t, key = "ib_theme") => { applyTheme(t); try { (t && t !== "gold") ? localStorage.setItem(key, t) : localStorage.removeItem(key); } catch {} };
+  // يبني زر الثيم + القائمة ويربطهم. storageKey يفصل تفضيل اللوحة عن الموقع
+  function mountThemePicker(btnEl, menuEl, { current, onPick, storageKey = "ib_theme", label } = {}) {
+    btnEl.innerHTML = icons.palette + (label ? ` <span>${label}</span>` : "");
+    const cur = () => document.documentElement.getAttribute("data-theme") || "gold";
+    const draw = () => {
+      menuEl.innerHTML = `<div style="padding:6px 10px;color:var(--dim);font-size:.78rem">اختر الثيم</div>` +
+        Object.entries(THEMES).map(([k, [name, sw]]) => `<button data-th="${k}" class="${cur() === k ? "on" : ""}"><span class="sw ${sw}"></span>${name}${cur() === k ? " ✔" : ""}</button>`).join("");
+    };
+    if (current) applyTheme(current);
+    draw();
+    btnEl.onclick = (e) => { e.stopPropagation(); menuEl.classList.toggle("open"); draw(); };
+    menuEl.onclick = (e) => { const b = e.target.closest("[data-th]"); if (!b) return; setTheme(b.dataset.th, storageKey); draw(); menuEl.classList.remove("open"); onPick && onPick(b.dataset.th); };
+    document.addEventListener("click", (e) => { if (!menuEl.contains(e.target) && e.target !== btnEl) menuEl.classList.remove("open"); });
+  }
 
   const PLATFORMS = {
     windows: { name: "ويندوز", short: "Windows" },
@@ -148,5 +175,5 @@ const IB = (() => {
     toast("تم النسخ ✔");
   }
 
-  return { icons, PLATFORMS, HOSTS, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtNum, copy };
+  return { icons, PLATFORMS, HOSTS, THEMES, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker };
 })();

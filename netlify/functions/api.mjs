@@ -56,6 +56,7 @@ const DEFAULT_SETTINGS = {
   facebook: "",
   phone: "",
   notice: "",
+  theme: "gold",
 };
 
 /* ---------- صلاحيات ---------- */
@@ -100,6 +101,11 @@ function normalizeApp(input, old = {}) {
     if (links.length) platforms[p] = links;
   }
   const oldClicks = old.clicks || {};
+  const platformNotes = {};
+  for (const p of PLATFORMS) {
+    const n = clean(input.platformNotes?.[p], 400);
+    if (n && platforms[p]) platformNotes[p] = n;
+  }
   return {
     id: old.id || uid(10),
     slug: slugify(input.slug || input.name || old.slug),
@@ -122,6 +128,7 @@ function normalizeApp(input, old = {}) {
       .filter(Boolean)
       .slice(0, 40),
     platforms,
+    platformNotes,
     featured: !!input.featured,
     published: input.published !== false,
     createdAt: old.createdAt || now(),

@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+<script>try{var t=localStorage.getItem("ib_admin_theme");if(t&&t!=="gold")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 body{display:block}
 .login{min-height:100vh;display:grid;place-items:center;padding:16px}
@@ -17,7 +18,7 @@ body{display:block}
 .login .logo{width:70px;height:70px;font-size:2rem;margin:0 auto 16px;border-radius:20px}
 
 .shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
-.side{padding:20px 14px;border-inline-end:1px solid var(--line2);background:rgba(0,0,0,.35);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.side{padding:20px 14px;border-inline-end:1px solid var(--line2);background:var(--sunken);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
 .side .brand{padding:6px 8px 22px}
 .side button.tab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:0;background:none;cursor:pointer;color:var(--muted);font-weight:700;text-align:start;width:100%}
 .side button.tab svg{width:20px;height:20px}
@@ -60,7 +61,7 @@ body{display:block}
 .sec>h2 small{font-family:var(--font);color:var(--dim);font-size:.8rem;font-weight:400}
 .hint{color:var(--dim);font-size:.8rem}
 
-.uploader{border:1.5px dashed var(--line);border-radius:var(--r2);padding:18px;text-align:center;cursor:pointer;transition:.2s;color:var(--muted);background:rgba(0,0,0,.2)}
+.uploader{border:1.5px dashed var(--line);border-radius:var(--r2);padding:18px;text-align:center;cursor:pointer;transition:.2s;color:var(--muted);background:var(--sunken)}
 .uploader:hover,.uploader.drag{border-color:var(--gold);background:var(--gold-dim);color:var(--gold3)}
 .uploader svg{width:28px;height:28px;margin:0 auto 6px;color:var(--gold)}
 .img-one{display:flex;gap:14px;align-items:center}
@@ -74,7 +75,7 @@ body{display:block}
 .thumb .tb button svg{width:14px;height:14px}
 .thumb .n{position:absolute;top:4px;right:6px;font-size:.7rem;background:rgba(0,0,0,.6);padding:0 6px;border-radius:6px}
 
-.tags{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-radius:var(--r2);border:1px solid var(--line2);background:rgba(0,0,0,.35);min-height:50px;align-items:center}
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-radius:var(--r2);border:1px solid var(--line2);background:var(--input-bg);min-height:50px;align-items:center}
 .tags span{display:inline-flex;align-items:center;gap:4px;padding:3px 6px 3px 12px;border-radius:999px;background:var(--gold-dim);border:1px solid var(--line);color:var(--gold3);font-size:.85rem}
 .tags span button{background:none;border:0;cursor:pointer;color:inherit;display:grid;place-items:center;width:18px;height:18px}
 .tags span button svg{width:12px;height:12px}
@@ -85,7 +86,7 @@ body{display:block}
 .plat-pick label svg{width:18px;height:18px}
 .plat-pick input{display:none}
 .plat-pick label.on{border-color:var(--gold);color:var(--gold3);background:var(--gold-dim)}
-.pblock{border:1px solid var(--line2);border-radius:var(--r);padding:16px;margin-bottom:14px;background:rgba(0,0,0,.2)}
+.pblock{border:1px solid var(--line2);border-radius:var(--r);padding:16px;margin-bottom:14px;background:var(--sunken)}
 .pblock>.ph{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-weight:800}
 .pblock>.ph svg{width:22px;height:22px;color:var(--gold)}
 .link-row{display:grid;grid-template-columns:150px 1fr 1.6fr auto;gap:8px;align-items:center;margin-bottom:8px}
@@ -98,7 +99,7 @@ body{display:block}
 @media(max-width:760px){.link-row{grid-template-columns:1fr 1fr}.link-row .u{grid-column:1/-1}}
 .tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
 @media(max-width:760px){.tools{grid-template-columns:1fr}}
-.tool{padding:14px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(212,175,55,.08),transparent)}
+.tool{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--gold-dim)}
 .tool h4{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.95rem}
 .tool h4 svg{width:18px;height:18px;color:var(--gold)}
 .hosts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
@@ -111,7 +112,7 @@ body{display:block}
 
 .switch{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;font-weight:700}
 .switch input{display:none}
-.switch i{width:46px;height:26px;border-radius:99px;background:#2a2822;position:relative;transition:.2s;flex:none}
+.switch i{width:46px;height:26px;border-radius:99px;background:var(--scroll);position:relative;transition:.2s;flex:none}
 .switch i::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#888;transition:.2s}
 .switch input:checked+i{background:var(--gold-dim);box-shadow:inset 0 0 0 1px var(--gold)}
 .switch input:checked+i::after{right:23px;background:var(--gold)}
@@ -126,7 +127,7 @@ body{display:block}
 .rq .m{font-size:.8rem;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap}
 .rq .ctl{display:grid;grid-template-columns:180px 1fr auto;gap:8px;margin-top:10px}
 @media(max-width:700px){.rq .ctl{grid-template-columns:1fr}}
-pre.post{white-space:pre-wrap;background:rgba(0,0,0,.4);border:1px solid var(--line2);border-radius:12px;padding:14px;font-family:var(--font);font-size:.92rem;max-height:46vh;overflow:auto;line-height:1.9}
+pre.post{white-space:pre-wrap;background:var(--sunken);border:1px solid var(--line2);border-radius:12px;padding:14px;font-family:var(--font);font-size:.92rem;max-height:46vh;overflow:auto;line-height:1.9;color:var(--text)}
 </style>
 </head>
 <body>
@@ -152,6 +153,7 @@ pre.post{white-space:pre-wrap;background:rgba(0,0,0,.4);border:1px solid var(--l
     <button class="tab" data-t="settings"></button>
     <button class="tab" data-t="backup"></button>
     <div class="foot" style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
+      <div class="theme-wrap"><button class="theme-btn" id="themeBtn" style="width:100%;border-radius:999px;height:38px" aria-label="ثيم اللوحة"></button><div class="theme-menu" id="themeMenu" style="top:auto;bottom:48px;inset-inline:0"></div></div>
       <a class="btn sm" href="/" target="_blank">فتح الموقع ↗</a>
       <button class="btn sm ghost" id="logoutBtn">خروج</button>
     </div>
@@ -195,6 +197,7 @@ $("#logoutBtn").onclick = () => { sessionStorage.removeItem("ib_admin"); locatio
 
 async function start() {
   $("#loginView").hidden = true; $("#appView").hidden = false;
+  IB.mountThemePicker($("#themeBtn"), $("#themeMenu"), { current: IB.savedTheme("ib_admin_theme") || "gold", storageKey: "ib_admin_theme" });
   await refresh();
   openTab("apps");
 }
@@ -302,6 +305,7 @@ function editApp(app) {
   const isNew = !app;
   const a = JSON.parse(JSON.stringify(app || { name: "", platforms: {}, screenshots: [], keywords: [], features: [], published: true }));
   a.platforms = a.platforms || {};
+  a.platformNotes = a.platformNotes || {};
   const enabled = new Set(Object.keys(a.platforms));
   const cats = [...new Set(APPS.map((x) => x.category).filter(Boolean))];
 
@@ -453,18 +457,22 @@ function editApp(app) {
   const hostOpts = (sel) => Object.entries(HOSTS).map(([k, v]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${v.name}</option>`).join("");
   const AUTO_HOSTS = [["gdrive", "Google Drive"], ["gofile", "Gofile"], ["catbox", "Catbox"], ["buzzheavier", "BuzzHeavier"], ["pixeldrain", "Pixeldrain"]];
 
+  const ANDROID_NOTE = "هذي النسخة تشتغل على كل أجهزة الأندرويد — الأجهزة البسيطة والقوية، متوافقة مع الاثنين.";
+
   function drawBlocks() {
     const order = Object.keys(PLATFORMS).filter((p) => enabled.has(p));
+    if (enabled.has("android") && !a.platformNotes.android) a.platformNotes.android = ANDROID_NOTE;
     $("#pblocks").innerHTML = order.length ? order.map((p) => `
       <div class="pblock" data-p="${p}">
         <div class="ph">${I[p]} ${PLATFORMS[p].name} <span class="chip" style="margin-inline-start:auto">${(a.platforms[p] || []).length} رابط</span></div>
+        <div class="field" style="margin-bottom:12px"><label>ملاحظة تظهر للمستخدم تحت روابط ${PLATFORMS[p].name} (اختياري)</label><input class="input" data-note="1" value="${esc(a.platformNotes[p] || "")}" placeholder="${p === "android" ? "مثلاً: تعمل على الأجهزة البسيطة والقوية" : "مثلاً: ملاحظة توافق أو متطلبات"}"></div>
         <div class="links">${(a.platforms[p] || []).map((l, i) => `
           <div class="link-row" data-i="${i}">
             <select class="input" data-k="host">${hostOpts(l.host)}</select>
             <input class="input" data-k="label" value="${esc(l.label)}" placeholder="اسم الزر (اختياري)">
             <input class="input u" data-k="url" dir="ltr" value="${esc(l.url)}" placeholder="https://… رابط التحميل">
             <div class="ops">
-              <button class="ibtn" data-op="up" title="لفوك">${I.up}</button>
+              <button class="ibtn" data-op="openhost" title="افتح موقع الرفع">${I.share}</button>
               <button class="ibtn" data-op="direct" title="تحويل لرابط مباشر (Drive/Dropbox)">${I.link}</button>
               <button class="ibtn bad" data-op="rm" title="حذف">${I.trash}</button>
             </div>
@@ -474,7 +482,7 @@ function editApp(app) {
         <div class="tools">
           <div class="tool">
             <h4>${I.cloud} رفع ملف من جهازي</h4>
-            <div class="hint">اختار المواقع: Gofile يرفع تلقائياً، والباقي ينفتح موقعه بتبويب جديد وتنضاف خانة تلصق بيها الرابط.</div>
+            <div class="hint">Gofile يرفع تلقائياً بضغطة. للمواقع الثانية (درايف، ميديافاير…) تنضاف خانة فارغة لكل موقع — افتح الموقع من زر ${""}🔗 بجنب الخانة، ارفع الملف، والصق الرابط.</div>
             <div class="hosts">${["gofile", "gdrive", "mediafire", "mega", "pixeldrain", "dropbox", "onedrive", "terabox", "telegram"].map((h) => `<label><input type="checkbox" value="${h}" ${h === "gofile" ? "checked" : ""}>${HOSTS[h].name}${HOSTS[h].direct ? " ⚡" : ""}</label>`).join("")}</div>
             <button class="btn sm gold" data-op="upfile">${I.cloud} اختيار الملف ورفعه</button>
             <div class="prog" hidden><i></i></div><div class="status-line"></div>
@@ -493,8 +501,11 @@ function editApp(app) {
   drawBlocks();
 
   $("#pblocks").oninput = (e) => {
+    const blk = e.target.closest(".pblock"); if (!blk) return;
+    const p = blk.dataset.p;
+    if (e.target.dataset.note !== undefined) { a.platformNotes[p] = e.target.value; dirty = true; return; }
     const row = e.target.closest(".link-row"); if (!row) return;
-    const p = row.closest(".pblock").dataset.p, l = a.platforms[p][+row.dataset.i], k = e.target.dataset.k;
+    const l = a.platforms[p][+row.dataset.i], k = e.target.dataset.k;
     if (!k) return;
     l[k] = e.target.value.trim();
     if (k === "url" && l.url) { const h = detectHost(l.url); l.host = h; row.querySelector('[data-k="host"]').value = h; }
@@ -509,6 +520,7 @@ function editApp(app) {
     if (op === "add") { list.push({ host: "direct", label: "", url: "" }); drawBlocks(); }
     if (op === "rm") { list.splice(i, 1); drawBlocks(); }
     if (op === "up" && i > 0) { [list[i - 1], list[i]] = [list[i], list[i - 1]]; drawBlocks(); }
+    if (op === "openhost") { const u = HOSTS[list[i]?.host]?.upload; if (u) window.open(u, "_blank", "noopener"); else toast("هذا النوع ما إله موقع رفع"); return; }
     if (op === "direct") { const n = toDirect(list[i].url || ""); if (n !== list[i].url) { list[i].url = n; drawBlocks(); toast("تحول لرابط تحميل مباشر ✔"); } else toast("هذا الرابط ما يحتاج تحويل"); }
     dirty = true;
 
@@ -519,11 +531,8 @@ function editApp(app) {
       const tool = b.closest(".tool"), st = tool.querySelector(".status-line"), pg = tool.querySelector(".prog");
       const sizeTxt = f.size > 1073741824 ? (f.size / 1073741824).toFixed(2) + " GB" : (f.size / 1048576).toFixed(1) + " MB";
       if (!$("#f_size").value) $("#f_size").value = sizeTxt;
-      // المواقع اليدوية: افتحها وضيف خانات
-      for (const h of hosts.filter((h) => h !== "gofile")) {
-        window.open(HOSTS[h].upload, "_blank", "noopener");
-        list.push({ host: h, label: HOSTS[h].name, url: "" });
-      }
+      // المواقع اليدوية: نضيف خانة فارغة لكل موقع (يفتحه ويلصق الرابط بزر 🔗)
+      for (const h of hosts.filter((h) => h !== "gofile")) list.push({ host: h, label: HOSTS[h].name, url: "" });
       if (hosts.includes("gofile")) {
         pg.hidden = false; st.textContent = "جاري الرفع على Gofile…";
         try {
@@ -534,7 +543,7 @@ function editApp(app) {
         pg.hidden = true;
       }
       drawBlocks();
-      if (hosts.some((h) => h !== "gofile")) toast("ارفع الملف بالمواقع اللي انفتحت والصق الروابط بالخانات الفارغة");
+      if (hosts.some((h) => h !== "gofile")) toast("انضافت خانات فارغة — افتح كل موقع من زر 🔗، ارفع الملف، والصق الرابط");
     }
 
     if (op === "mirror") {
@@ -702,11 +711,16 @@ function drawSettings() {
     ["developerName", "اسم المطور"], ["developerBio", "نبذة عن المطور", true],
     ["telegram", "رابط تيليكرام", 0, 1], ["tiktok", "رابط تيك توك", 0, 1], ["instagram", "رابط انستكرام", 0, 1], ["facebook", "رابط فيسبوك", 0, 1], ["phone", "رقم التواصل (اختياري)", 0, 1],
   ];
+  const curTheme = SET.theme || "gold";
   main.innerHTML = `<div class="topbar"><h1>إعدادات الموقع</h1></div>
+    <div class="sec glass"><h2>${I.palette} ثيم الموقع الافتراضي <small>— اللي يشوفه الزائر أول مرة (يكدر يغيّره من زر الثيم)</small></h2>
+      <div class="field"><label>الثيم</label><select class="input" id="s_theme">${Object.entries(IB.THEMES).map(([k, [name]]) => `<option value="${k}" ${k === curTheme ? "selected" : ""}>${name}</option>`).join("")}</select></div>
+    </div>
     <div class="sec glass"><div class="ed-grid">${F.map(([k, l, ta, ltr]) => `<div class="field ${ta ? "full" : ""}"><label>${l}</label>${ta ? `<textarea class="input" id="s_${k}">${esc(SET[k] || "")}</textarea>` : `<input class="input" id="s_${k}" ${ltr ? 'dir="ltr"' : ""} value="${esc(SET[k] || "")}">`}</div>`).join("")}</div></div>
     <div class="savebar glass"><button class="btn gold" id="sSave">${I.check} حفظ الإعدادات</button></div>`;
   $("#sSave").onclick = async () => {
     const body = Object.fromEntries(F.map(([k]) => [k, $("#s_" + k).value]));
+    body.theme = $("#s_theme").value;
     try { SET = await api("/admin/settings", { method: "PUT", body }); toast("انحفظت ✔"); } catch (er) { toast(er.message, true); }
   };
 }
