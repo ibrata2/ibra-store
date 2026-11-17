@@ -57,6 +57,7 @@ const DEFAULT_SETTINGS = {
   phone: "",
   notice: "",
   theme: "gold",
+  view: "grid",
 };
 
 /* ---------- صلاحيات ---------- */
