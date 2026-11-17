@@ -1,0 +1,10 @@
+{
+  "name": "ibra-store",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "IBRA STORE — موقع نشر برامج وتطبيقات ابراهيم الخزرجي",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
