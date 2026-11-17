@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>لوحة الإدارة — IBRA STORE</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+body{display:block}
+.login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.login .glass{width:min(420px,100%);padding:34px;text-align:center}
+.login .logo{width:70px;height:70px;font-size:2rem;margin:0 auto 16px;border-radius:20px}
+
+.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.side{padding:20px 14px;border-inline-end:1px solid var(--line2);background:rgba(0,0,0,.35);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+.side .brand{padding:6px 8px 22px}
+.side button.tab{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:0;background:none;cursor:pointer;color:var(--muted);font-weight:700;text-align:start;width:100%}
+.side button.tab svg{width:20px;height:20px}
+.side button.tab:hover{color:var(--text);background:var(--panel)}
+.side button.tab.on{color:var(--gold3);background:var(--gold-dim);box-shadow:inset 0 0 0 1px var(--line)}
+.side .count{margin-inline-start:auto;background:var(--gold);color:#000;border-radius:999px;font-size:.72rem;padding:0 8px;min-width:22px;text-align:center}
+.main{padding:26px clamp(14px,3vw,36px) 80px;min-width:0}
+.topbar .filters{max-width:100%}
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.topbar h1{font-family:var(--head);font-size:1.7rem}
+.topbar .sp{flex:1}
+@media(max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:sticky;top:0;z-index:40;height:auto;flex-direction:row;overflow-x:auto;padding:10px;border:0;border-bottom:1px solid var(--line2);backdrop-filter:blur(14px)}
+  .side .brand,.side .foot{display:none}
+  .side button.tab{width:auto;white-space:nowrap}
+}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
+.kpi{padding:18px}
+.kpi span{color:var(--dim);font-size:.85rem}
+.kpi b{display:block;font-family:var(--head);font-size:1.8rem}
+
+.row-app{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:10px}
+.row-app .app-icon{width:52px;height:52px;border-radius:14px;flex:none;background:linear-gradient(145deg,#1d1a12,#0b0b0d);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--head);color:var(--gold);font-size:1.3rem;overflow:hidden}
+.row-app .app-icon img{width:100%;height:100%;object-fit:cover}
+.row-app .nm{flex:1;min-width:0}
+.row-app .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-app .nm small{color:var(--dim)}
+.row-app .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill-off{color:var(--bad)!important;border-color:rgba(255,107,107,.35)!important}
+
+/* المحرر */
+.ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ed-grid .full{grid-column:1/-1}
+@media(max-width:700px){.ed-grid{grid-template-columns:1fr}}
+.sec{padding:22px;margin-bottom:18px}
+.sec>h2{font-family:var(--head);font-size:1.15rem;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.sec>h2 svg{width:22px;height:22px;color:var(--gold)}
+.sec>h2 small{font-family:var(--font);color:var(--dim);font-size:.8rem;font-weight:400}
+.hint{color:var(--dim);font-size:.8rem}
+
+.uploader{border:1.5px dashed var(--line);border-radius:var(--r2);padding:18px;text-align:center;cursor:pointer;transition:.2s;color:var(--muted);background:rgba(0,0,0,.2)}
+.uploader:hover,.uploader.drag{border-color:var(--gold);background:var(--gold-dim);color:var(--gold3)}
+.uploader svg{width:28px;height:28px;margin:0 auto 6px;color:var(--gold)}
+.img-one{display:flex;gap:14px;align-items:center}
+.img-one .prev{width:90px;height:90px;border-radius:20px;border:1px solid var(--line2);background:#0c0c0f center/cover;flex:none;display:grid;place-items:center;color:var(--dim)}
+.img-one .prev.wide{width:160px;border-radius:12px}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.thumb{position:relative;width:150px;height:96px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:#0c0c0f}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .tb{position:absolute;inset:auto 0 0 0;display:flex;justify-content:space-between;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.thumb .tb button{width:26px;height:26px;border-radius:8px;border:0;background:rgba(255,255,255,.12);cursor:pointer;display:grid;place-items:center}
+.thumb .tb button svg{width:14px;height:14px}
+.thumb .n{position:absolute;top:4px;right:6px;font-size:.7rem;background:rgba(0,0,0,.6);padding:0 6px;border-radius:6px}
+
+.tags{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-radius:var(--r2);border:1px solid var(--line2);background:rgba(0,0,0,.35);min-height:50px;align-items:center}
+.tags span{display:inline-flex;align-items:center;gap:4px;padding:3px 6px 3px 12px;border-radius:999px;background:var(--gold-dim);border:1px solid var(--line);color:var(--gold3);font-size:.85rem}
+.tags span button{background:none;border:0;cursor:pointer;color:inherit;display:grid;place-items:center;width:18px;height:18px}
+.tags span button svg{width:12px;height:12px}
+.tags input{flex:1;min-width:140px;background:none;border:0;outline:0;padding:4px}
+
+.plat-pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.plat-pick label{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:700;color:var(--muted);user-select:none}
+.plat-pick label svg{width:18px;height:18px}
+.plat-pick input{display:none}
+.plat-pick label.on{border-color:var(--gold);color:var(--gold3);background:var(--gold-dim)}
+.pblock{border:1px solid var(--line2);border-radius:var(--r);padding:16px;margin-bottom:14px;background:rgba(0,0,0,.2)}
+.pblock>.ph{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-weight:800}
+.pblock>.ph svg{width:22px;height:22px;color:var(--gold)}
+.link-row{display:grid;grid-template-columns:150px 1fr 1.6fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.link-row .input{padding:9px 11px;font-size:.9rem}
+.link-row .ops{display:flex;gap:4px}
+.ibtn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;display:grid;place-items:center;flex:none}
+.ibtn svg{width:16px;height:16px}
+.ibtn:hover{border-color:var(--gold);color:var(--gold3)}
+.ibtn.bad:hover{border-color:var(--bad);color:var(--bad)}
+@media(max-width:760px){.link-row{grid-template-columns:1fr 1fr}.link-row .u{grid-column:1/-1}}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:760px){.tools{grid-template-columns:1fr}}
+.tool{padding:14px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(212,175,55,.08),transparent)}
+.tool h4{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:.95rem}
+.tool h4 svg{width:18px;height:18px;color:var(--gold)}
+.hosts{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.hosts label{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line2);font-size:.82rem;cursor:pointer;background:var(--panel)}
+.hosts label:has(input:checked){border-color:var(--gold);color:var(--gold3);background:var(--gold-dim)}
+.hosts input{accent-color:var(--gold)}
+.prog{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--gold3));transition:width .2s}
+.status-line{font-size:.82rem;color:var(--muted);margin-top:6px;min-height:1.2em}
+
+.switch{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;font-weight:700}
+.switch input{display:none}
+.switch i{width:46px;height:26px;border-radius:99px;background:#2a2822;position:relative;transition:.2s;flex:none}
+.switch i::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#888;transition:.2s}
+.switch input:checked+i{background:var(--gold-dim);box-shadow:inset 0 0 0 1px var(--gold)}
+.switch input:checked+i::after{right:23px;background:var(--gold)}
+
+.savebar{position:sticky;bottom:14px;z-index:30;display:flex;gap:10px;align-items:center;padding:12px 16px;margin-top:10px}
+.savebar .sp{flex:1}
+
+.rq{padding:16px 18px;margin-bottom:12px}
+.rq .h{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.rq h3{font-size:1.05rem;flex:1;min-width:200px}
+.rq p{color:var(--muted);white-space:pre-line;font-size:.93rem;margin:6px 0}
+.rq .m{font-size:.8rem;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap}
+.rq .ctl{display:grid;grid-template-columns:180px 1fr auto;gap:8px;margin-top:10px}
+@media(max-width:700px){.rq .ctl{grid-template-columns:1fr}}
+pre.post{white-space:pre-wrap;background:rgba(0,0,0,.4);border:1px solid var(--line2);border-radius:12px;padding:14px;font-family:var(--font);font-size:.92rem;max-height:46vh;overflow:auto;line-height:1.9}
+</style>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div class="login" id="loginView">
+  <form class="glass" id="loginForm">
+    <div class="logo"><span class="gold-text">IB</span></div>
+    <h2 style="font-family:var(--head);font-size:1.5rem">لوحة الإدارة</h2>
+    <p class="sub" style="margin:4px 0 20px">IBRA STORE — خاصة بالمطور</p>
+    <input class="input" type="password" name="pass" placeholder="كلمة سر الإدارة" dir="ltr" autocomplete="current-password" required style="text-align:center">
+    <button class="btn gold" style="width:100%;margin-top:14px" type="submit">دخول</button>
+    <p class="hint" style="margin-top:14px">كلمة السر هي قيمة ADMIN_PASSWORD اللي حطيتها بإعدادات Netlify</p>
+  </form>
+</div>
+
+<!-- اللوحة -->
+<div class="shell" id="appView" hidden>
+  <aside class="side">
+    <div class="brand"><div class="logo"><span class="gold-text">IB</span></div><div><b class="gold-text">IBRA STORE</b><small>لوحة الإدارة</small></div></div>
+    <button class="tab on" data-t="apps"></button>
+    <button class="tab" data-t="requests"></button>
+    <button class="tab" data-t="settings"></button>
+    <button class="tab" data-t="backup"></button>
+    <div class="foot" style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
+      <a class="btn sm" href="/" target="_blank">فتح الموقع ↗</a>
+      <button class="btn sm ghost" id="logoutBtn">خروج</button>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<!-- نافذة المنشور -->
+<div class="modal-bg" id="postModal">
+  <div class="modal glass" style="width:min(640px,100%)">
+    <h3>منشور جاهز للنشر</h3>
+    <div class="mode-switch" style="display:flex;gap:6px;margin-bottom:12px" id="postTabs"></div>
+    <pre class="post" id="postText"></pre>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn gold" id="postCopy">نسخ المنشور</button>
+      <button class="btn ghost" id="postClose">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script src="/shared.js"></script>
+<script>
+const { icons: I, PLATFORMS, HOSTS, detectHost, toDirect, esc, api, toast, fmtDate, fmtNum, copy } = IB;
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const main = $("#main");
+let APPS = [], REQS = [], SET = {}, TAB = "apps";
+
+const TABS = { apps: [I.grid, "التطبيقات"], requests: [I.chat, "الطلبات"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
+$$(".side .tab").forEach((b) => (b.innerHTML = `${TABS[b.dataset.t][0]}<span>${TABS[b.dataset.t][1]}</span>${b.dataset.t === "requests" ? '<span class="count" id="newCount" hidden></span>' : ""}`));
+$$(".side .tab").forEach((b) => (b.onclick = () => openTab(b.dataset.t)));
+
+/* ---------- دخول ---------- */
+$("#loginForm").onsubmit = async (e) => {
+  e.preventDefault();
+  sessionStorage.setItem("ib_admin", e.target.pass.value);
+  try { await api("/admin/check"); start(); }
+  catch (er) { sessionStorage.removeItem("ib_admin"); toast(er.message, true); }
+};
+$("#logoutBtn").onclick = () => { sessionStorage.removeItem("ib_admin"); location.reload(); };
+
+async function start() {
+  $("#loginView").hidden = true; $("#appView").hidden = false;
+  await refresh();
+  openTab("apps");
+}
+async function refresh() {
+  [APPS, REQS, SET] = await Promise.all([api("/admin/apps"), api("/admin/requests"), api("/settings")]);
+  const n = REQS.filter((r) => r.status === "new" && !r.hidden).length;
+  const c = $("#newCount"); c.hidden = !n; c.textContent = n;
+}
+function openTab(t) {
+  TAB = t;
+  $$(".side .tab").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
+  ({ apps: drawApps, requests: drawRequests, settings: drawSettings, backup: drawBackup })[t]();
+  scrollTo(0, 0);
+}
+
+const iconBox = (a) => `<div class="app-icon">${a.icon ? `<img src="${esc(a.icon)}" alt="">` : esc((a.name || "?")[0])}</div>`;
+
+/* ========== قائمة التطبيقات ========== */
+function drawApps() {
+  const dl = APPS.reduce((s, a) => s + (a.downloads || 0), 0), vw = APPS.reduce((s, a) => s + (a.views || 0), 0);
+  main.innerHTML = `
+  <div class="topbar"><h1>التطبيقات</h1><span class="sp"></span><button class="btn gold" id="newApp">${I.plus} تطبيق جديد</button></div>
+  <div class="kpis">
+    <div class="kpi glass"><span>التطبيقات</span><b class="gold-text">${APPS.length}</b></div>
+    <div class="kpi glass"><span>التحميلات</span><b class="gold-text">${fmtNum(dl)}</b></div>
+    <div class="kpi glass"><span>المشاهدات</span><b class="gold-text">${fmtNum(vw)}</b></div>
+    <div class="kpi glass"><span>طلبات جديدة</span><b class="gold-text">${REQS.filter((r) => r.status === "new").length}</b></div>
+  </div>
+  <div id="list">${APPS.length ? [...APPS].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map((a) => `
+    <div class="row-app glass">
+      ${iconBox(a)}
+      <div class="nm"><b>${esc(a.name)}</b><small>${Object.keys(a.platforms || {}).map((p) => PLATFORMS[p]?.name).join(" · ") || "بدون روابط بعد"} — ${fmtNum(a.downloads)} تحميل · ${fmtNum(a.views)} مشاهدة</small></div>
+      <div class="acts">
+        ${a.featured ? '<span class="chip gold">مميز</span>' : ""}
+        ${a.published ? "" : '<span class="chip pill-off">مخفي</span>'}
+        <button class="btn sm" data-post="${a.id}">${I.telegram} منشور</button>
+        <a class="btn sm" href="/app/${encodeURIComponent(a.slug)}" target="_blank">${I.eye}</a>
+        <button class="btn sm" data-edit="${a.id}">${I.edit} تعديل</button>
+        <button class="btn sm danger" data-del="${a.id}">${I.trash}</button>
+      </div>
+    </div>`).join("") : `<div class="empty glass"><div class="big">📦</div>ماكو تطبيقات بعد — اضغط "تطبيق جديد" وانشر أول برنامج</div>`}</div>`;
+  $("#newApp").onclick = () => editApp(null);
+  $("#list").onclick = async (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.edit) editApp(APPS.find((a) => a.id === b.dataset.edit));
+    if (b.dataset.post) showPost(APPS.find((a) => a.id === b.dataset.post));
+    if (b.dataset.del) {
+      const a = APPS.find((x) => x.id === b.dataset.del);
+      if (!confirm(`حذف "${a.name}" نهائياً من الموقع؟`)) return;
+      try { await api("/admin/apps/" + a.id, { method: "DELETE" }); APPS = APPS.filter((x) => x.id !== a.id); drawApps(); toast("انحذف"); } catch (er) { toast(er.message, true); }
+    }
+  };
+}
+
+/* ========== ضغط ورفع الصور ========== */
+function compressImage(file, max = 1600, q = 0.86) {
+  return new Promise((res, rej) => {
+    if (file.type === "image/gif" || file.type === "image/svg+xml") {
+      const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      let { width: w, height: h } = img;
+      const s = Math.min(1, max / Math.max(w, h)); w = Math.round(w * s); h = Math.round(h * s);
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      let out = c.toDataURL("image/webp", q);
+      if (!out.startsWith("data:image/webp")) out = c.toDataURL("image/jpeg", q);
+      URL.revokeObjectURL(img.src); res(out);
+    };
+    img.onerror = () => rej(new Error("ملف الصورة تالف"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function uploadImage(file, max) {
+  const data = await compressImage(file, max);
+  const r = await api("/admin/upload", { method: "POST", body: { data, name: file.name } });
+  return r.url;
+}
+function pickFiles(accept, multiple) {
+  return new Promise((res) => {
+    const i = document.createElement("input"); i.type = "file"; i.accept = accept; i.multiple = multiple;
+    i.onchange = () => res([...i.files]); i.click();
+  });
+}
+
+/* ========== الرفع المباشر على Gofile من المتصفح ========== */
+function uploadGofile(file, onProg) {
+  return new Promise((res, rej) => {
+    const fd = new FormData(); fd.append("file", file);
+    const x = new XMLHttpRequest();
+    x.open("POST", "https://upload.gofile.io/uploadfile");
+    x.upload.onprogress = (e) => e.lengthComputable && onProg(e.loaded / e.total);
+    x.onload = () => {
+      try { const d = JSON.parse(x.responseText); if (d.status === "ok") return res(d.data.downloadPage); } catch {}
+      rej(new Error("Gofile رفض الملف"));
+    };
+    x.onerror = () => rej(new Error("ما گدرت أوصل لـ Gofile (ممكن محجوب أو مشكلة اتصال)"));
+    x.send(fd);
+  });
+}
+
+/* ========== محرر التطبيق ========== */
+function editApp(app) {
+  const isNew = !app;
+  const a = JSON.parse(JSON.stringify(app || { name: "", platforms: {}, screenshots: [], keywords: [], features: [], published: true }));
+  a.platforms = a.platforms || {};
+  const enabled = new Set(Object.keys(a.platforms));
+  const cats = [...new Set(APPS.map((x) => x.category).filter(Boolean))];
+
+  main.innerHTML = `
+  <div class="topbar">
+    <button class="btn sm ghost" id="back">→ رجوع</button>
+    <h1>${isNew ? "تطبيق جديد" : "تعديل: " + esc(a.name)}</h1><span class="sp"></span>
+  </div>
+
+  <div class="sec glass"><h2>${I.edit} المعلومات الأساسية</h2>
+    <div class="ed-grid">
+      <div class="field"><label>اسم التطبيق *</label><input class="input" id="f_name" value="${esc(a.name)}" placeholder="IBRA PLAYER"></div>
+      <div class="field"><label>رابط الصفحة (slug) <span class="hint">— يتولد تلقائياً</span></label><input class="input" id="f_slug" dir="ltr" value="${esc(a.slug || "")}" placeholder="ibra-player"></div>
+      <div class="field full"><label>وصف قصير (سطر واحد يظهر بالكارت)</label><input class="input" id="f_tagline" maxlength="200" value="${esc(a.tagline || "")}" placeholder="مشغل ميديا فخم بستايل زجاجي يدعم كل الصيغ"></div>
+      <div class="field full"><label>مربع الشرح الكامل <span class="hint">— السطر اللي يبدأ بـ - يتحول لنقطة</span></label><textarea class="input" id="f_description" style="min-height:200px">${esc(a.description || "")}</textarea></div>
+      <div class="field full"><label>المميزات (كل ميزة بسطر)</label><textarea class="input" id="f_features">${esc((a.features || []).join("\n"))}</textarea></div>
+      <div class="field"><label>القسم</label><input class="input" id="f_category" list="cats" value="${esc(a.category || "")}" placeholder="برامج / ألعاب / أدوات…"><datalist id="cats">${["برامج", "ألعاب", "أدوات", "ميديا", "تصميم", "تعليم", ...cats].filter((v, i, s) => s.indexOf(v) === i).map((c) => `<option value="${esc(c)}">`).join("")}</datalist></div>
+      <div class="field"><label>الإصدار</label><input class="input" id="f_version" dir="ltr" value="${esc(a.version || "")}" placeholder="1.0.0"></div>
+      <div class="field"><label>الحجم</label><input class="input" id="f_size" value="${esc(a.size || "")}" placeholder="85 MB"></div>
+      <div class="field"><label>اللغة</label><input class="input" id="f_language" value="${esc(a.language || "")}" placeholder="عربي / إنكليزي"></div>
+      <div class="field full"><label>المتطلبات</label><input class="input" id="f_requirements" value="${esc(a.requirements || "")}" placeholder="ويندوز 10 أو أحدث، 4GB رام"></div>
+      <div class="field full"><label>ما الجديد بهذا الإصدار</label><textarea class="input" id="f_changelog" style="min-height:80px">${esc(a.changelog || "")}</textarea></div>
+      <div class="full" style="display:flex;gap:26px;flex-wrap:wrap">
+        <label class="switch"><input type="checkbox" id="f_published" ${a.published !== false ? "checked" : ""}><i></i>منشور (يظهر بالموقع)</label>
+        <label class="switch"><input type="checkbox" id="f_featured" ${a.featured ? "checked" : ""}><i></i>تطبيق مميز (يظهر بالأعلى)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec glass"><h2>${I.tag} كلمات مفتاحية <small>— للبحث والهاشتاكات بالمنشور (اكتب واضغط Enter أو فاصلة)</small></h2>
+    <div class="tags" id="tags"><input id="tagIn" placeholder="مثلاً: مشغل فيديو"></div>
+  </div>
+
+  <div class="sec glass"><h2>${I.image} الأيقونة والصور</h2>
+    <div class="ed-grid">
+      <div class="field"><label>أيقونة التطبيق</label>
+        <div class="img-one"><div class="prev" id="iconPrev"></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><button class="btn sm" id="iconUp">${I.cloud} رفع أيقونة</button><button class="btn sm ghost" id="iconDel">إزالة</button></div></div></div>
+      <div class="field"><label>صورة الغلاف (للتطبيق المميز)</label>
+        <div class="img-one"><div class="prev wide" id="coverPrev"></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><button class="btn sm" id="coverUp">${I.cloud} رفع غلاف</button><button class="btn sm ghost" id="coverDel">إزالة</button></div></div></div>
+      <div class="field full"><label>صور من التطبيق</label>
+        <div class="uploader" id="shotDrop">${I.image}<div>اسحب الصور هنا أو اضغط للاختيار (تنضغط تلقائياً)</div></div>
+        <div class="thumbs" id="thumbs"></div></div>
+    </div>
+  </div>
+
+  <div class="sec glass"><h2>${I.play} فيديو التطبيق <small>— اختياري</small></h2>
+    <div class="field"><label>رابط يوتيوب / تيك توك / Google Drive / رابط فيديو مباشر</label><input class="input" id="f_video" dir="ltr" value="${esc(a.video || "")}" placeholder="https://youtu.be/..."></div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+      <button class="btn sm" id="vidUp">${I.cloud} رفع فيديو من جهازي (Gofile)</button>
+      <span class="hint">يرفع الفيديو ويحط الرابط تلقائياً</span>
+    </div>
+    <div class="prog" id="vidProg" hidden><i></i></div>
+  </div>
+
+  <div class="sec glass"><h2>${I.download} المنصات وروابط التحميل <small>— تكدر تحط أكثر من رابط لكل منصة</small></h2>
+    <div class="plat-pick" id="platPick">${Object.entries(PLATFORMS).map(([k, v]) => `<label class="${enabled.has(k) ? "on" : ""}"><input type="checkbox" value="${k}" ${enabled.has(k) ? "checked" : ""}>${I[k]} ${v.name}</label>`).join("")}</div>
+    <div id="pblocks"></div>
+  </div>
+
+  <div class="savebar glass">
+    <button class="btn gold" id="save">${I.check} ${isNew ? "نشر التطبيق" : "حفظ التعديلات"}</button>
+    ${isNew ? "" : `<button class="btn" id="postBtn">${I.telegram} منشور جاهز</button><a class="btn ghost" href="/app/${encodeURIComponent(a.slug)}" target="_blank">${I.eye} عرض</a>`}
+    <span class="sp"></span><span class="hint" id="saveHint"></span>
+  </div>`;
+
+  $("#back").onclick = () => { if (!dirty || confirm("فيه تعديلات ما محفوظة، تطلع؟")) drawApps(); };
+  let dirty = false;
+  main.addEventListener("input", () => (dirty = true), { once: false });
+
+  /* كلمات مفتاحية */
+  const drawTags = () => {
+    $$("#tags span").forEach((s) => s.remove());
+    a.keywords.forEach((k, i) => {
+      const s = document.createElement("span");
+      s.innerHTML = `#${esc(k)}<button title="حذف">${I.x}</button>`;
+      s.querySelector("button").onclick = () => { a.keywords.splice(i, 1); drawTags(); };
+      $("#tags").insertBefore(s, $("#tagIn"));
+    });
+  };
+  const addTags = (v) => { v.split(/[,،\n]/).map((x) => x.trim().replace(/^#/, "")).filter(Boolean).forEach((k) => !a.keywords.includes(k) && a.keywords.push(k)); drawTags(); };
+  $("#tagIn").onkeydown = (e) => { if (e.key === "Enter" || e.key === "," || e.key === "،") { e.preventDefault(); addTags(e.target.value); e.target.value = ""; } else if (e.key === "Backspace" && !e.target.value && a.keywords.length) { a.keywords.pop(); drawTags(); } };
+  $("#tagIn").onblur = (e) => { if (e.target.value) { addTags(e.target.value); e.target.value = ""; } };
+  $("#tagIn").onpaste = (e) => { e.preventDefault(); addTags(e.clipboardData.getData("text")); };
+  drawTags();
+
+  /* الأيقونة والغلاف */
+  const drawOne = () => {
+    $("#iconPrev").style.backgroundImage = a.icon ? `url('${a.icon}')` : ""; $("#iconPrev").textContent = a.icon ? "" : "لا توجد";
+    $("#coverPrev").style.backgroundImage = a.cover ? `url('${a.cover}')` : ""; $("#coverPrev").textContent = a.cover ? "" : "لا يوجد";
+  };
+  drawOne();
+  const upOne = (key, max) => async () => {
+    const [f] = await pickFiles("image/*", false); if (!f) return;
+    toast("جاري الرفع…");
+    try { a[key] = await uploadImage(f, max); drawOne(); dirty = true; toast("تم ✔"); } catch (er) { toast(er.message, true); }
+  };
+  $("#iconUp").onclick = upOne("icon", 512);
+  $("#coverUp").onclick = upOne("cover", 1600);
+  $("#iconDel").onclick = () => { a.icon = ""; drawOne(); };
+  $("#coverDel").onclick = () => { a.cover = ""; drawOne(); };
+
+  /* صور التطبيق */
+  const drawThumbs = () => {
+    $("#thumbs").innerHTML = a.screenshots.map((s, i) => `
+      <div class="thumb"><img src="${esc(s)}" alt=""><span class="n">${i + 1}</span>
+        <div class="tb"><button data-mv="${i}" data-d="-1" title="قبل">${I.up.replace("m6 15 6-6 6 6", "m9 6 6 6-6 6")}</button><button data-rm="${i}" title="حذف">${I.trash}</button><button data-mv="${i}" data-d="1" title="بعد">${I.up.replace("m6 15 6-6 6 6", "m15 6-6 6 6 6")}</button></div></div>`).join("");
+  };
+  drawThumbs();
+  $("#thumbs").onclick = (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.rm) a.screenshots.splice(+b.dataset.rm, 1);
+    if (b.dataset.mv) { const i = +b.dataset.mv, j = i + +b.dataset.d; if (j >= 0 && j < a.screenshots.length) [a.screenshots[i], a.screenshots[j]] = [a.screenshots[j], a.screenshots[i]]; }
+    dirty = true; drawThumbs();
+  };
+  const addShots = async (files) => {
+    files = files.filter((f) => f.type.startsWith("image/")); if (!files.length) return;
+    let n = 0;
+    for (const f of files) {
+      toast(`رفع الصورة ${++n} من ${files.length}…`);
+      try { a.screenshots.push(await uploadImage(f, 1600)); drawThumbs(); } catch (er) { toast(er.message, true); }
+    }
+    dirty = true; toast("تم رفع الصور ✔");
+  };
+  const drop = $("#shotDrop");
+  drop.onclick = async () => addShots(await pickFiles("image/*", true));
+  drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("drag"); };
+  drop.ondragleave = () => drop.classList.remove("drag");
+  drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("drag"); addShots([...e.dataTransfer.files]); };
+  document.onpaste = (e) => { if (TAB !== "apps" || !$("#shotDrop")) return; const fs = [...e.clipboardData.files]; if (fs.length) { e.preventDefault(); addShots(fs); } };
+
+  /* رفع فيديو */
+  $("#vidUp").onclick = async () => {
+    const [f] = await pickFiles("video/*", false); if (!f) return;
+    const pg = $("#vidProg"); pg.hidden = false;
+    try { const u = await uploadGofile(f, (p) => (pg.firstElementChild.style.width = p * 100 + "%")); $("#f_video").value = u; dirty = true; toast("انرفع الفيديو ✔"); }
+    catch (er) { toast(er.message, true); }
+    pg.hidden = true;
+  };
+
+  /* المنصات والروابط */
+  $("#platPick").onchange = (e) => {
+    const p = e.target.value;
+    if (e.target.checked) { enabled.add(p); a.platforms[p] = a.platforms[p] || []; } else enabled.delete(p);
+    e.target.parentElement.classList.toggle("on", e.target.checked);
+    drawBlocks();
+  };
+  const hostOpts = (sel) => Object.entries(HOSTS).map(([k, v]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${v.name}</option>`).join("");
+  const AUTO_HOSTS = [["gdrive", "Google Drive"], ["gofile", "Gofile"], ["catbox", "Catbox"], ["buzzheavier", "BuzzHeavier"], ["pixeldrain", "Pixeldrain"]];
+
+  function drawBlocks() {
+    const order = Object.keys(PLATFORMS).filter((p) => enabled.has(p));
+    $("#pblocks").innerHTML = order.length ? order.map((p) => `
+      <div class="pblock" data-p="${p}">
+        <div class="ph">${I[p]} ${PLATFORMS[p].name} <span class="chip" style="margin-inline-start:auto">${(a.platforms[p] || []).length} رابط</span></div>
+        <div class="links">${(a.platforms[p] || []).map((l, i) => `
+          <div class="link-row" data-i="${i}">
+            <select class="input" data-k="host">${hostOpts(l.host)}</select>
+            <input class="input" data-k="label" value="${esc(l.label)}" placeholder="اسم الزر (اختياري)">
+            <input class="input u" data-k="url" dir="ltr" value="${esc(l.url)}" placeholder="https://… رابط التحميل">
+            <div class="ops">
+              <button class="ibtn" data-op="up" title="لفوك">${I.up}</button>
+              <button class="ibtn" data-op="direct" title="تحويل لرابط مباشر (Drive/Dropbox)">${I.link}</button>
+              <button class="ibtn bad" data-op="rm" title="حذف">${I.trash}</button>
+            </div>
+          </div>`).join("") || '<div class="hint" style="margin-bottom:8px">ماكو روابط — أضف رابط أو ارفع ملف ⬇</div>'}</div>
+        <button class="btn sm" data-op="add">${I.plus} إضافة رابط</button>
+
+        <div class="tools">
+          <div class="tool">
+            <h4>${I.cloud} رفع ملف من جهازي</h4>
+            <div class="hint">اختار المواقع: Gofile يرفع تلقائياً، والباقي ينفتح موقعه بتبويب جديد وتنضاف خانة تلصق بيها الرابط.</div>
+            <div class="hosts">${["gofile", "gdrive", "mediafire", "mega", "pixeldrain", "dropbox", "onedrive", "terabox", "telegram"].map((h) => `<label><input type="checkbox" value="${h}" ${h === "gofile" ? "checked" : ""}>${HOSTS[h].name}${HOSTS[h].direct ? " ⚡" : ""}</label>`).join("")}</div>
+            <button class="btn sm gold" data-op="upfile">${I.cloud} اختيار الملف ورفعه</button>
+            <div class="prog" hidden><i></i></div><div class="status-line"></div>
+          </div>
+          <div class="tool">
+            <h4>${I.link} رفع من رابط (GitHub)</h4>
+            <div class="hint">الصق رابط الملف من GitHub Releases — السيرفر ينزّله ويرفعه على المواقع المختارة ويضيف الروابط هنا. رابط GitHub ما يظهر للناس.</div>
+            <input class="input gh-url" dir="ltr" placeholder="https://github.com/ibrata2/…/releases/download/…/setup.exe" style="margin-top:8px;padding:9px 11px;font-size:.88rem">
+            <div class="hosts">${AUTO_HOSTS.map(([h, n]) => `<label><input type="checkbox" value="${h}" ${h === "gofile" || h === "gdrive" ? "checked" : ""}>${n}</label>`).join("")}</div>
+            <button class="btn sm gold" data-op="mirror">${I.send} ابدأ الرفع</button>
+            <div class="status-line"></div>
+          </div>
+        </div>
+      </div>`).join("") : '<div class="hint">اختار المنصات اللي البرنامج متوفر عليها ⬆</div>';
+  }
+  drawBlocks();
+
+  $("#pblocks").oninput = (e) => {
+    const row = e.target.closest(".link-row"); if (!row) return;
+    const p = row.closest(".pblock").dataset.p, l = a.platforms[p][+row.dataset.i], k = e.target.dataset.k;
+    if (!k) return;
+    l[k] = e.target.value.trim();
+    if (k === "url" && l.url) { const h = detectHost(l.url); l.host = h; row.querySelector('[data-k="host"]').value = h; }
+  };
+  $("#pblocks").onchange = (e) => $("#pblocks").oninput(e);
+
+  $("#pblocks").onclick = async (e) => {
+    const b = e.target.closest("[data-op]"); if (!b) return;
+    const blk = b.closest(".pblock"), p = blk.dataset.p, list = (a.platforms[p] = a.platforms[p] || []);
+    const row = b.closest(".link-row"), i = row ? +row.dataset.i : -1;
+    const op = b.dataset.op;
+    if (op === "add") { list.push({ host: "direct", label: "", url: "" }); drawBlocks(); }
+    if (op === "rm") { list.splice(i, 1); drawBlocks(); }
+    if (op === "up" && i > 0) { [list[i - 1], list[i]] = [list[i], list[i - 1]]; drawBlocks(); }
+    if (op === "direct") { const n = toDirect(list[i].url || ""); if (n !== list[i].url) { list[i].url = n; drawBlocks(); toast("تحول لرابط تحميل مباشر ✔"); } else toast("هذا الرابط ما يحتاج تحويل"); }
+    dirty = true;
+
+    if (op === "upfile") {
+      const hosts = $$(".tool:first-child .hosts input:checked", blk).map((x) => x.value);
+      if (!hosts.length) return toast("اختار موقع واحد على الأقل", true);
+      const [f] = await pickFiles("*/*", false); if (!f) return;
+      const tool = b.closest(".tool"), st = tool.querySelector(".status-line"), pg = tool.querySelector(".prog");
+      const sizeTxt = f.size > 1073741824 ? (f.size / 1073741824).toFixed(2) + " GB" : (f.size / 1048576).toFixed(1) + " MB";
+      if (!$("#f_size").value) $("#f_size").value = sizeTxt;
+      // المواقع اليدوية: افتحها وضيف خانات
+      for (const h of hosts.filter((h) => h !== "gofile")) {
+        window.open(HOSTS[h].upload, "_blank", "noopener");
+        list.push({ host: h, label: HOSTS[h].name, url: "" });
+      }
+      if (hosts.includes("gofile")) {
+        pg.hidden = false; st.textContent = "جاري الرفع على Gofile…";
+        try {
+          const u = await uploadGofile(f, (x) => { pg.firstElementChild.style.width = x * 100 + "%"; st.textContent = `جاري الرفع على Gofile… ${Math.round(x * 100)}%`; });
+          list.unshift({ host: "gofile", label: "Gofile", url: u });
+          st.textContent = "✔ انرفع على Gofile";
+        } catch (er) { st.textContent = "✘ " + er.message; toast(er.message, true); }
+        pg.hidden = true;
+      }
+      drawBlocks();
+      if (hosts.some((h) => h !== "gofile")) toast("ارفع الملف بالمواقع اللي انفتحت والصق الروابط بالخانات الفارغة");
+    }
+
+    if (op === "mirror") {
+      const tool = b.closest(".tool"), st = tool.querySelector(".status-line");
+      const url = tool.querySelector(".gh-url").value.trim();
+      const hosts = $$(".hosts input:checked", tool).map((x) => x.value);
+      if (!/^https:\/\//.test(url)) return toast("الصق رابط الملف أولاً", true);
+      if (!a.id) return toast("احفظ التطبيق أولاً، بعدين سوي الرفع من رابط", true);
+      b.disabled = true; st.textContent = "جاري تشغيل الرفع…";
+      try {
+        const before = JSON.stringify(APPS.find((x) => x.id === a.id)?.platforms?.[p] || []);
+        const r = await api("/admin/mirror", { method: "POST", body: { url, hosts, appId: a.id, platform: p, siteUrl: location.origin } });
+        st.innerHTML = `⏳ الرفع شغّال (يأخذ دقيقة إلى عدة دقائق حسب الحجم) — <a href="${esc(r.actions)}" target="_blank" style="color:var(--gold3)">متابعة</a>`;
+        let tries = 0;
+        const poll = setInterval(async () => {
+          tries++;
+          try {
+            const fresh = (await api("/admin/apps")).find((x) => x.id === a.id);
+            const now = JSON.stringify(fresh?.platforms?.[p] || []);
+            if (fresh && now !== before) {
+              clearInterval(poll);
+              const old = new Set(list.map((l) => l.url));
+              for (const l of fresh.platforms[p]) if (!old.has(l.url)) list.push(l);
+              if (fresh.size && !$("#f_size").value) $("#f_size").value = fresh.size;
+              APPS = APPS.map((x) => (x.id === a.id ? { ...x, platforms: fresh.platforms, size: fresh.size } : x));
+              const log = fresh.mirrorLog?.[0];
+              drawBlocks();
+              toast(`✔ انضافت ${log?.ok ?? ""} روابط جديدة`);
+              const st2 = $(`.pblock[data-p="${p}"] .tool:last-child .status-line`);
+              if (st2) st2.textContent = log?.errors ? "✔ خلص — بعض المواقع فشلت: " + log.errors : "✔ خلص الرفع وانضافت الروابط";
+            }
+          } catch {}
+          if (tries > 80) { clearInterval(poll); st.textContent = "ما وصلت الروابط بعد — شوف صفحة المتابعة"; }
+        }, 15000);
+      } catch (er) { st.textContent = "✘ " + er.message; toast(er.message, true); }
+      b.disabled = false;
+    }
+  };
+
+  /* الحفظ */
+  const collect = () => {
+    const g = (id) => $("#f_" + id).value.trim();
+    const platforms = {};
+    for (const p of enabled) {
+      const ls = (a.platforms[p] || []).filter((l) => l.url);
+      if (ls.length) platforms[p] = ls;
+    }
+    return {
+      ...a, name: g("name"), slug: g("slug"), tagline: g("tagline"), description: g("description"),
+      features: g("features").split("\n").map((x) => x.trim()).filter(Boolean),
+      category: g("category"), version: g("version"), size: g("size"), language: g("language"),
+      requirements: g("requirements"), changelog: g("changelog"), video: g("video"),
+      published: $("#f_published").checked, featured: $("#f_featured").checked, platforms,
+    };
+  };
+  const save = async () => {
+    const body = collect();
+    if (!body.name) return toast("اكتب اسم التطبيق", true);
+    $("#save").disabled = true;
+    try {
+      const saved = await api(isNew && !a.id ? "/admin/apps" : "/admin/apps/" + a.id, { method: isNew && !a.id ? "POST" : "PUT", body });
+      const i = APPS.findIndex((x) => x.id === saved.id);
+      if (i >= 0) APPS[i] = saved; else APPS.push(saved);
+      dirty = false;
+      toast("انحفظ ✔");
+      const wasNew = isNew;
+      editApp(saved);
+      $("#saveHint").textContent = "آخر حفظ: " + new Date().toLocaleTimeString("ar-IQ");
+      if (wasNew) showPost(saved);
+    } catch (er) { toast(er.message, true); }
+    $("#save") && ($("#save").disabled = false);
+  };
+  $("#save").onclick = save;
+  $("#postBtn") && ($("#postBtn").onclick = () => showPost(collect()));
+  document.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && $("#save")) { e.preventDefault(); save(); } };
+}
+
+/* ========== المنشور الجاهز ========== */
+function buildPost(a, kind) {
+  const url = location.origin + "/app/" + encodeURIComponent(a.slug || "");
+  const plats = Object.keys(a.platforms || {}).map((p) => PLATFORMS[p]?.name).filter(Boolean);
+  const feats = (a.features || []).slice(0, 7);
+  const tags = (a.keywords || []).slice(0, 12).map((k) => "#" + k.replace(/\s+/g, "_"));
+  const L = [];
+  if (kind === "telegram") {
+    L.push(`✨ ${a.name}${a.version ? " — الإصدار " + a.version : ""}`, "");
+    if (a.tagline) L.push(a.tagline, "");
+    if (feats.length) { L.push("🔸 المميزات:"); feats.forEach((f) => L.push("• " + f)); L.push(""); }
+    if (plats.length) L.push("💻 متوفر على: " + plats.join(" | "));
+    if (a.size) L.push("📦 الحجم: " + a.size);
+    L.push("", "⬇️ التحميل (أكثر من رابط):", url, "");
+    L.push("💡 عندك فكرة برنامج؟ اطلبه من الموقع:", location.origin + "/requests", "");
+    L.push("برمجة وتطوير ابراهيم الخزرجي", "تيليكرام: https://t.me/ibraprogram", "تيك توك: ibraprogram");
+    if (tags.length) L.push("", tags.join(" "));
+  } else if (kind === "facebook") {
+    L.push(`🔥 برنامج جديد: ${a.name}`, "");
+    if (a.tagline) L.push(a.tagline, "");
+    if (feats.length) { feats.forEach((f) => L.push("✅ " + f)); L.push(""); }
+    if (plats.length) L.push("متوفر لـ " + plats.join(" و "));
+    L.push("مجاني بالكامل 🎁", "", "رابط التحميل 👇", url, "", "برمجة وتطوير ابراهيم الخزرجي");
+    if (tags.length) L.push("", tags.join(" "));
+  } else {
+    L.push(`${a.name} ✨`, a.tagline || "", "");
+    if (feats.length) feats.slice(0, 5).forEach((f) => L.push("▫️ " + f));
+    L.push("", "📥 رابط التحميل بالبايو", "", "برمجة وتطوير ابراهيم الخزرجي — تيك توك ibraprogram");
+    if (tags.length) L.push("", tags.join(" "));
+  }
+  return L.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+function showPost(a) {
+  const m = $("#postModal"); let kind = "telegram";
+  const kinds = { telegram: "تيليكرام", facebook: "فيسبوك", instagram: "انستكرام / تيك توك" };
+  const draw = () => {
+    $("#postTabs").innerHTML = Object.entries(kinds).map(([k, v]) => `<button class="${k === kind ? "on" : ""}" data-k="${k}" style="flex:1">${v}</button>`).join("");
+    $("#postText").textContent = buildPost(a, kind);
+  };
+  $("#postTabs").onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) { kind = b.dataset.k; draw(); } };
+  $("#postCopy").onclick = () => copy($("#postText").textContent);
+  $("#postClose").onclick = () => m.classList.remove("open");
+  m.onclick = (e) => { if (e.target === m) m.classList.remove("open"); };
+  draw(); m.classList.add("open");
+}
+
+/* ========== الطلبات ========== */
+const STATUS = { new: "جديد", review: "قيد الدراسة", progress: "قيد التطوير", done: "تم التنفيذ ✔", rejected: "غير ممكن" };
+function drawRequests() {
+  let filt = "all";
+  main.innerHTML = `<div class="topbar"><h1>طلبات التطبيقات</h1><span class="sp"></span>
+    <div class="filters" id="rf" style="padding:0"><button data-s="all" class="on">الكل (${REQS.length})</button>${Object.entries(STATUS).map(([k, v]) => `<button data-s="${k}">${v} (${REQS.filter((r) => r.status === k).length})</button>`).join("")}</div></div>
+    <div id="rl"></div>`;
+  const draw = () => {
+    const list = [...REQS].filter((r) => filt === "all" || r.status === filt).sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0) || b.createdAt.localeCompare(a.createdAt));
+    $("#rl").innerHTML = list.length ? list.map((r) => `
+      <div class="rq glass" data-id="${r.id}" style="${r.hidden ? "opacity:.5" : ""}">
+        <div class="h"><h3>${esc(r.title)}</h3><span class="chip gold">${I.up} ${r.votes?.length || 0} صوت</span>${r.hidden ? '<span class="chip pill-off">مخفي</span>' : ""}</div>
+        ${r.details ? `<p>${esc(r.details)}</p>` : ""}
+        <div class="m"><span>${r.username ? "👤 " + esc(r.author) + " (@" + esc(r.username) + ")" : "زائر: " + esc(r.author)}</span>${r.contact ? `<span>📞 ${esc(r.contact)}</span>` : ""}${r.platform ? `<span>${PLATFORMS[r.platform]?.name || ""}</span>` : ""}<span>${fmtDate(r.createdAt)}</span></div>
+        <div class="ctl">
+          <select class="input" data-k="status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${r.status === k ? "selected" : ""}>${v}</option>`).join("")}</select>
+          <input class="input" data-k="reply" value="${esc(r.reply || "")}" placeholder="رد يظهر للناس تحت الطلب (اختياري)">
+          <div style="display:flex;gap:6px"><button class="btn sm gold" data-a="save">حفظ</button><button class="btn sm" data-a="hide">${r.hidden ? "إظهار" : "إخفاء"}</button><button class="btn sm danger" data-a="del">${I.trash}</button></div>
+        </div>
+      </div>`).join("") : '<div class="empty glass"><div class="big">💬</div>ماكو طلبات</div>';
+  };
+  draw();
+  $("#rf").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filt = b.dataset.s; $("#rf .on").classList.remove("on"); b.classList.add("on"); draw(); };
+  $("#rl").onclick = async (e) => {
+    const b = e.target.closest("[data-a]"); if (!b) return;
+    const card = b.closest(".rq"), id = card.dataset.id, r = REQS.find((x) => x.id === id);
+    try {
+      if (b.dataset.a === "save") Object.assign(r, await api("/admin/requests/" + id, { method: "PUT", body: { status: card.querySelector('[data-k="status"]').value, reply: card.querySelector('[data-k="reply"]').value } }));
+      if (b.dataset.a === "hide") Object.assign(r, await api("/admin/requests/" + id, { method: "PUT", body: { hidden: !r.hidden } }));
+      if (b.dataset.a === "del") { if (!confirm("حذف الطلب نهائياً؟")) return; await api("/admin/requests/" + id, { method: "DELETE" }); REQS = REQS.filter((x) => x.id !== id); }
+      toast("تم ✔"); draw();
+      const n = REQS.filter((x) => x.status === "new" && !x.hidden).length; $("#newCount").hidden = !n; $("#newCount").textContent = n;
+    } catch (er) { toast(er.message, true); }
+  };
+}
+
+/* ========== الإعدادات ========== */
+function drawSettings() {
+  const F = [
+    ["siteName", "اسم الموقع"], ["siteSubtitle", "الوصف تحت الاسم"], ["heroTitle", "العنوان الكبير بالرئيسية"],
+    ["heroText", "النص تحت العنوان", true], ["notice", "تنبيه يظهر بالرئيسية (اختياري)"],
+    ["developerName", "اسم المطور"], ["developerBio", "نبذة عن المطور", true],
+    ["telegram", "رابط تيليكرام", 0, 1], ["tiktok", "رابط تيك توك", 0, 1], ["instagram", "رابط انستكرام", 0, 1], ["facebook", "رابط فيسبوك", 0, 1], ["phone", "رقم التواصل (اختياري)", 0, 1],
+  ];
+  main.innerHTML = `<div class="topbar"><h1>إعدادات الموقع</h1></div>
+    <div class="sec glass"><div class="ed-grid">${F.map(([k, l, ta, ltr]) => `<div class="field ${ta ? "full" : ""}"><label>${l}</label>${ta ? `<textarea class="input" id="s_${k}">${esc(SET[k] || "")}</textarea>` : `<input class="input" id="s_${k}" ${ltr ? 'dir="ltr"' : ""} value="${esc(SET[k] || "")}">`}</div>`).join("")}</div></div>
+    <div class="savebar glass"><button class="btn gold" id="sSave">${I.check} حفظ الإعدادات</button></div>`;
+  $("#sSave").onclick = async () => {
+    const body = Object.fromEntries(F.map(([k]) => [k, $("#s_" + k).value]));
+    try { SET = await api("/admin/settings", { method: "PUT", body }); toast("انحفظت ✔"); } catch (er) { toast(er.message, true); }
+  };
+}
+
+/* ========== نسخة احتياطية ========== */
+function drawBackup() {
+  main.innerHTML = `<div class="topbar"><h1>نسخة احتياطية</h1></div>
+    <div class="sec glass"><h2>${I.download} تنزيل نسخة</h2><p class="sub" style="margin-bottom:14px">ملف JSON فيه كل التطبيقات والطلبات والإعدادات (الصور تبقى على الموقع).</p><button class="btn gold" id="bDl">تنزيل النسخة</button></div>
+    <div class="sec glass"><h2>${I.cloud} استرجاع نسخة</h2><p class="sub" style="margin-bottom:14px">⚠️ يستبدل البيانات الحالية بالكامل.</p><button class="btn danger" id="bUp">اختيار ملف واسترجاع</button></div>`;
+  $("#bDl").onclick = async () => {
+    const d = await api("/admin/backup");
+    const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" });
+    const u = URL.createObjectURL(blob), l = document.createElement("a");
+    l.href = u; l.download = `ibra-store-backup-${new Date().toISOString().slice(0, 10)}.json`; l.click(); URL.revokeObjectURL(u);
+  };
+  $("#bUp").onclick = async () => {
+    const [f] = await pickFiles(".json,application/json", false); if (!f) return;
+    if (!confirm("متأكد؟ راح تنمسح البيانات الحالية وتنحط النسخة.")) return;
+    try { await api("/admin/restore", { method: "POST", body: JSON.parse(await f.text()) }); await refresh(); toast("تم الاسترجاع ✔"); } catch (er) { toast(er.message, true); }
+  };
+}
+
+/* تشغيل */
+if (sessionStorage.getItem("ib_admin")) api("/admin/check").then(start).catch(() => sessionStorage.removeItem("ib_admin"));
+</script>
+</body>
+</html>
