@@ -145,7 +145,7 @@ const publicApp = (a) => {
 };
 
 /* ---------- الطلبات (طلبات التطبيقات) ---------- */
-const publicReq = (r, viewer) => ({
+const publicReq = (r, viewer, appsById) => ({
   id: r.id,
   title: r.title,
   details: r.details,
@@ -158,6 +158,9 @@ const publicReq = (r, viewer) => ({
   voted: viewer ? (r.votes || []).includes(viewer) : false,
   createdAt: r.createdAt,
   mine: viewer && r.username ? r.username === viewer.replace(/^u:/, "") : false,
+  app: r.appId && appsById && appsById[r.appId]
+    ? { slug: appsById[r.appId].slug, name: appsById[r.appId].name, icon: appsById[r.appId].icon || "" }
+    : null,
 });
 
 /* ---------- الراوتر ---------- */
@@ -262,7 +265,8 @@ export default async (req, context) => {
       const viewer = u ? "u:" + u.username : "ip:" + crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
       const reqs = (await loadReqs()).filter((r) => !r.hidden);
       reqs.sort((a, b) => (b.votes?.length || 0) - (a.votes?.length || 0) || b.createdAt.localeCompare(a.createdAt));
-      return json(reqs.map((r) => publicReq(r, viewer)));
+      const appsById = Object.fromEntries((await loadApps()).filter((a) => a.published).map((a) => [a.id, a]));
+      return json(reqs.map((r) => publicReq(r, viewer, appsById)));
     }
     if (path === "/requests" && m === "POST") {
       if (body.website) return json({ ok: true }); // فخ للسبام
@@ -422,6 +426,10 @@ export default async (req, context) => {
           if (body.status !== undefined) reqs[i].status = clean(body.status, 20);
           if (body.reply !== undefined) reqs[i].reply = clean(body.reply, 2000);
           if (body.hidden !== undefined) reqs[i].hidden = !!body.hidden;
+          if (body.appId !== undefined) {
+            reqs[i].appId = clean(body.appId, 20) || null;
+            if (reqs[i].appId && reqs[i].status === "new") reqs[i].status = "done"; // ربط تطبيق = تم التنفيذ
+          }
           await saveReqs(reqs);
           return json(reqs[i]);
         }

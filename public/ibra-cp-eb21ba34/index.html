@@ -681,11 +681,14 @@ function drawRequests() {
         <div class="h"><h3>${esc(r.title)}</h3><span class="chip gold">${I.up} ${r.votes?.length || 0} صوت</span>${r.hidden ? '<span class="chip pill-off">مخفي</span>' : ""}</div>
         ${r.details ? `<p>${esc(r.details)}</p>` : ""}
         <div class="m"><span>${r.username ? "👤 " + esc(r.author) + " (@" + esc(r.username) + ")" : "زائر: " + esc(r.author)}</span>${r.contact ? `<span>📞 ${esc(r.contact)}</span>` : ""}${r.platform ? `<span>${PLATFORMS[r.platform]?.name || ""}</span>` : ""}<span>${fmtDate(r.createdAt)}</span></div>
+        ${r.app ? `<div class="reply" style="display:flex;align-items:center;gap:8px"><b>✅ تم عمل التطبيق:</b> <a href="/app/${encodeURIComponent(r.app.slug)}" target="_blank" style="color:var(--gold3)">${esc(r.app.name)} ↗</a></div>` : ""}
         <div class="ctl">
           <select class="input" data-k="status">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${r.status === k ? "selected" : ""}>${v}</option>`).join("")}</select>
           <input class="input" data-k="reply" value="${esc(r.reply || "")}" placeholder="رد يظهر للناس تحت الطلب (اختياري)">
           <div style="display:flex;gap:6px"><button class="btn sm gold" data-a="save">حفظ</button><button class="btn sm" data-a="hide">${r.hidden ? "إظهار" : "إخفاء"}</button><button class="btn sm danger" data-a="del">${I.trash}</button></div>
         </div>
+        <div class="field" style="margin-top:10px"><label>🔗 اربط هذا الطلب بتطبيق منشور (يظهر للطالب رابط مباشر "تم عمل تطبيقك")</label>
+          <select class="input" data-k="app"><option value="">— بدون ربط —</option>${[...APPS].sort((x, y) => x.name.localeCompare(y.name)).map((a) => `<option value="${a.id}" ${r.appId === a.id ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select></div>
       </div>`).join("") : '<div class="empty glass"><div class="big">💬</div>ماكو طلبات</div>';
   };
   draw();
@@ -694,7 +697,7 @@ function drawRequests() {
     const b = e.target.closest("[data-a]"); if (!b) return;
     const card = b.closest(".rq"), id = card.dataset.id, r = REQS.find((x) => x.id === id);
     try {
-      if (b.dataset.a === "save") Object.assign(r, await api("/admin/requests/" + id, { method: "PUT", body: { status: card.querySelector('[data-k="status"]').value, reply: card.querySelector('[data-k="reply"]').value } }));
+      if (b.dataset.a === "save") Object.assign(r, await api("/admin/requests/" + id, { method: "PUT", body: { status: card.querySelector('[data-k="status"]').value, reply: card.querySelector('[data-k="reply"]').value, appId: card.querySelector('[data-k="app"]').value } }));
       if (b.dataset.a === "hide") Object.assign(r, await api("/admin/requests/" + id, { method: "PUT", body: { hidden: !r.hidden } }));
       if (b.dataset.a === "del") { if (!confirm("حذف الطلب نهائياً؟")) return; await api("/admin/requests/" + id, { method: "DELETE" }); REQS = REQS.filter((x) => x.id !== id); }
       toast("تم ✔"); draw();

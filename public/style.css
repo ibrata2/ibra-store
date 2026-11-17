@@ -196,6 +196,14 @@ select.input option{background:var(--option-bg)}
 .sw-dark{background:linear-gradient(135deg,#5f9be0,#0c0f14)}
 .sw-light{background:linear-gradient(135deg,#2563c9,#fff)}
 
+/* ---------- أزرار الفلترة ---------- */
+.filters{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;flex-wrap:wrap}
+.filters::-webkit-scrollbar{display:none}
+.filters button{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);cursor:pointer;font-weight:700;white-space:nowrap;transition:.2s}
+.filters button svg{width:17px;height:17px}
+.filters button:hover{color:var(--text)}
+.filters button.on{color:var(--on-accent);background:linear-gradient(135deg,var(--acc-hi),var(--gold));border-color:transparent}
+
 /* ---------- عام ---------- */
 .section{padding:40px 0}
 .h-title{font-family:var(--head);font-size:clamp(1.5rem,3vw,2rem);margin-bottom:6px}

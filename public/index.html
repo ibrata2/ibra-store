@@ -30,12 +30,6 @@
 .stats b{display:block;font-family:var(--head);font-size:1.7rem}
 .stats span{color:var(--dim);font-size:.85rem}
 
-.filters{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none}
-.filters::-webkit-scrollbar{display:none}
-.filters button{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);cursor:pointer;font-weight:700;white-space:nowrap;transition:.2s}
-.filters button svg{width:17px;height:17px}
-.filters button:hover{color:var(--text)}
-.filters button.on{color:var(--on-accent);background:linear-gradient(135deg,var(--acc-hi),var(--gold));border-color:transparent}
 
 .featured{display:grid;grid-template-columns:1.1fr 1fr;gap:0;overflow:hidden;margin-bottom:28px;cursor:pointer;transition:.3s}
 .featured:hover{border-color:var(--line)}
@@ -139,6 +133,13 @@
 .req p{color:var(--muted);font-size:.93rem;white-space:pre-line}
 .req .rmeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center;font-size:.8rem;color:var(--dim)}
 .reply{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--gold-dim);border:1px solid var(--line);font-size:.92rem}
+.done-app{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,var(--gold-dim),transparent);border:1px solid var(--gold);transition:.2s}
+.done-app:hover{background:var(--gold-dim);transform:translateY(-1px)}
+.done-app img,.done-app .di{width:44px;height:44px;border-radius:12px;flex:none;object-fit:cover;background:var(--logo-grad);display:grid;place-items:center;color:var(--gold);font-family:var(--head);font-size:1.3rem;border:1px solid var(--line)}
+.done-app .dt{flex:1;min-width:0}
+.done-app .dt b{display:block;color:var(--gold3)}
+.done-app .dt small{color:var(--muted);font-size:.8rem}
+.done-app svg{width:22px;height:22px;color:var(--gold);flex:none}
 .reply b{color:var(--gold3)}
 .st{padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;border:1px solid}
 .st-new{color:var(--info);border-color:rgba(127,182,255,.35)}
@@ -509,6 +510,7 @@ async function renderRequests() {
             <span>${r.registered ? "👤 " : ""}${esc(r.author)}</span><span>·</span><span>${fmtDate(r.createdAt)}</span>
           </div>
           ${r.reply ? `<div class="reply"><b>رد المطور:</b> ${esc(r.reply)}</div>` : ""}
+          ${r.app ? `<a class="done-app" href="/app/${encodeURIComponent(r.app.slug)}" data-link>${r.app.icon ? `<img src="${esc(r.app.icon)}" alt="">` : `<span class="di">${esc((r.app.name || "?")[0])}</span>`}<span class="dt"><b>✅ تم عمل التطبيق — ${esc(r.app.name)}</b><small>اضغط للتحميل من صفحة البرنامج</small></span>${I.download}</a>` : ""}
         </div>
       </div>`).join("") : `<div class="empty"><div class="big">💡</div>ماكو طلبات بعد — كون أول واحد يطلب!</div>`;
   };
