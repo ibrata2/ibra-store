@@ -150,6 +150,7 @@ pre.post{white-space:pre-wrap;background:var(--sunken);border:1px solid var(--li
     <div class="brand"><div class="logo"><span class="gold-text">IB</span></div><div><b class="gold-text">IBRA STORE</b><small>لوحة الإدارة</small></div></div>
     <button class="tab on" data-t="apps"></button>
     <button class="tab" data-t="requests"></button>
+    <button class="tab" data-t="reports"></button>
     <button class="tab" data-t="settings"></button>
     <button class="tab" data-t="backup"></button>
     <div class="foot" style="margin-top:auto;display:flex;flex-direction:column;gap:6px">
@@ -180,10 +181,10 @@ const { icons: I, PLATFORMS, HOSTS, detectHost, toDirect, esc, api, toast, fmtDa
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const main = $("#main");
-let APPS = [], REQS = [], SET = {}, TAB = "apps";
+let APPS = [], REQS = [], REPORTS = [], SET = {}, TAB = "apps";
 
-const TABS = { apps: [I.grid, "التطبيقات"], requests: [I.chat, "الطلبات"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
-$$(".side .tab").forEach((b) => (b.innerHTML = `${TABS[b.dataset.t][0]}<span>${TABS[b.dataset.t][1]}</span>${b.dataset.t === "requests" ? '<span class="count" id="newCount" hidden></span>' : ""}`));
+const TABS = { apps: [I.grid, "التطبيقات"], requests: [I.chat, "الطلبات"], reports: [I.warn, "بلاغات الروابط"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
+$$(".side .tab").forEach((b) => (b.innerHTML = `${TABS[b.dataset.t][0]}<span>${TABS[b.dataset.t][1]}</span>${b.dataset.t === "requests" ? '<span class="count" id="newCount" hidden></span>' : b.dataset.t === "reports" ? '<span class="count" id="repCount" hidden style="background:var(--bad);color:#fff"></span>' : ""}`));
 $$(".side .tab").forEach((b) => (b.onclick = () => openTab(b.dataset.t)));
 
 /* ---------- دخول ---------- */
@@ -202,14 +203,15 @@ async function start() {
   openTab("apps");
 }
 async function refresh() {
-  [APPS, REQS, SET] = await Promise.all([api("/admin/apps"), api("/admin/requests"), api("/settings")]);
+  [APPS, REQS, REPORTS, SET] = await Promise.all([api("/admin/apps"), api("/admin/requests"), api("/admin/reports").catch(() => []), api("/settings")]);
   const n = REQS.filter((r) => r.status === "new" && !r.hidden).length;
   const c = $("#newCount"); c.hidden = !n; c.textContent = n;
+  const rn = REPORTS.length; const rc = $("#repCount"); rc.hidden = !rn; rc.textContent = rn;
 }
 function openTab(t) {
   TAB = t;
   $$(".side .tab").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
-  ({ apps: drawApps, requests: drawRequests, settings: drawSettings, backup: drawBackup })[t]();
+  ({ apps: drawApps, requests: drawRequests, reports: drawReports, settings: drawSettings, backup: drawBackup })[t]();
   scrollTo(0, 0);
 }
 
@@ -231,6 +233,7 @@ function drawApps() {
       ${iconBox(a)}
       <div class="nm"><b>${esc(a.name)}</b><small>${Object.keys(a.platforms || {}).map((p) => PLATFORMS[p]?.name).join(" · ") || "بدون روابط بعد"} — ${fmtNum(a.downloads)} تحميل · ${fmtNum(a.views)} مشاهدة</small></div>
       <div class="acts">
+        ${REPORTS.filter((r) => r.appId === a.id).length ? `<span class="chip" style="color:var(--bad);border-color:var(--bad)" title="بلاغات روابط">${I.warn} ${REPORTS.filter((r) => r.appId === a.id).length}</span>` : ""}
         ${a.featured ? '<span class="chip gold">مميز</span>' : ""}
         ${a.published ? "" : '<span class="chip pill-off">مخفي</span>'}
         <button class="btn sm" data-post="${a.id}">${I.telegram} منشور</button>
@@ -703,6 +706,45 @@ function drawRequests() {
       toast("تم ✔"); draw();
       const n = REQS.filter((x) => x.status === "new" && !x.hidden).length; $("#newCount").hidden = !n; $("#newCount").textContent = n;
     } catch (er) { toast(er.message, true); }
+  };
+}
+
+/* ========== بلاغات الروابط ========== */
+function drawReports() {
+  // تجميع البلاغات حسب الرابط
+  const groups = {};
+  for (const r of REPORTS) {
+    (groups[r.linkId] = groups[r.linkId] || { ...r, count: 0, notes: [] }).count++;
+    if (r.note) groups[r.linkId].notes.push(r.note);
+  }
+  const list = Object.values(groups).sort((a, b) => b.count - a.count || b.at.localeCompare(a.at));
+  main.innerHTML = `<div class="topbar"><h1>بلاغات الروابط</h1><span class="sp"></span>${REPORTS.length ? `<span class="chip" style="color:var(--bad)">${REPORTS.length} بلاغ</span>` : ""}</div>
+    <p class="sub" style="margin-bottom:16px">روابط التحميل اللي بلّغ عنها الزوار إنها معطّلة. صلّح الرابط من التطبيقات، بعدها اضغط "تم الإصلاح".</p>
+    <div id="repl">${list.length ? list.map((g) => {
+      const app = APPS.find((a) => a.id === g.appId);
+      return `<div class="rq glass" data-link="${g.linkId}" data-app="${g.appId}">
+        <div class="h"><h3>${esc(g.appName)} <span class="chip">${PLATFORMS[g.platform]?.name || g.platform}</span></h3><span class="chip" style="color:var(--bad);border-color:var(--bad)">${I.warn} ${g.count} بلاغ</span></div>
+        <div class="m"><span>الرابط: ${esc(g.label || (IB.HOSTS[g.host]?.name) || g.host)}</span><span dir="ltr" style="direction:ltr;word-break:break-all">${esc(g.url)}</span><span>آخر بلاغ: ${fmtDate(g.at)}</span></div>
+        ${g.notes.length ? `<div class="reply"><b>ملاحظات الزوار:</b> ${g.notes.slice(0, 8).map((n) => esc(n)).join(" • ")}</div>` : ""}
+        <div class="ctl" style="grid-template-columns:auto auto 1fr">
+          <a class="btn sm" href="${g.url}" target="_blank" rel="noopener">${I.eye} فتح الرابط</a>
+          ${app ? `<button class="btn sm gold" data-a="fix">${I.edit} صلّح التطبيق</button>` : ""}
+          <button class="btn sm" data-a="done" style="justify-self:end">${I.check} تم الإصلاح (حذف البلاغات)</button>
+        </div>
+      </div>`;
+    }).join("") : '<div class="empty glass"><div class="big">✅</div>ماكو بلاغات — كل الروابط شغّالة</div>'}</div>`;
+  $("#repl").onclick = async (e) => {
+    const b = e.target.closest("[data-a]"); if (!b) return;
+    const card = b.closest("[data-link]"), linkId = card.dataset.link, appId = card.dataset.app;
+    if (b.dataset.a === "fix") { const app = APPS.find((a) => a.id === appId); if (app) editApp(app); return; }
+    if (b.dataset.a === "done") {
+      try {
+        await api("/admin/reports/clear", { method: "POST", body: { linkId } });
+        REPORTS = REPORTS.filter((r) => r.linkId !== linkId);
+        const rn = REPORTS.length; $("#repCount").hidden = !rn; $("#repCount").textContent = rn;
+        toast("انحذفت البلاغات ✔"); drawReports();
+      } catch (er) { toast(er.message, true); }
+    }
   };
 }
 

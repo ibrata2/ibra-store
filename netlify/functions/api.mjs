@@ -80,6 +80,8 @@ const loadApps = () => getJSON("data", "apps", []);
 const saveApps = (a) => setJSON("data", "apps", a);
 const loadReqs = () => getJSON("data", "requests", []);
 const saveReqs = (r) => setJSON("data", "requests", r);
+const loadReports = () => getJSON("data", "reports", []);
+const saveReports = (r) => setJSON("data", "reports", r);
 const loadSettings = async () => ({ ...DEFAULT_SETTINGS, ...(await getJSON("data", "settings", {})) });
 
 const slugify = (s) =>
@@ -309,6 +311,34 @@ export default async (req, context) => {
       return json(publicReq(r, viewer));
     }
 
+    /* ===== الإبلاغ عن رابط معطّل ===== */
+    if (path === "/report" && m === "POST") {
+      const apps = await loadApps();
+      const a = apps.find((x) => x.id === body.appId && x.published);
+      if (!a) return err("التطبيق غير موجود", 404);
+      let link = null, plat = "";
+      for (const p of Object.keys(a.platforms || {})) {
+        const f = (a.platforms[p] || []).find((l) => l.id === body.linkId);
+        if (f) { link = f; plat = p; break; }
+      }
+      if (!link) return err("الرابط غير موجود", 404);
+      const ipHash = crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+      const reports = await loadReports();
+      // منع التكرار: نفس الشخص لنفس الرابط خلال ساعة
+      const dup = reports.find((r) => r.linkId === body.linkId && r.ipHash === ipHash && Date.now() - Date.parse(r.at) < 3600_000);
+      if (dup) return json({ ok: true, already: true });
+      // حد ضد السبام
+      const recent = reports.filter((r) => r.ipHash === ipHash && Date.now() - Date.parse(r.at) < 60_000);
+      if (recent.length >= 6) return err("انتظر دقيقة", 429);
+      reports.unshift({
+        id: uid(10), appId: a.id, appName: a.name, appSlug: a.slug,
+        platform: plat, linkId: link.id, host: link.host, label: link.label || "", url: link.url,
+        note: clean(body.note, 300), ipHash, at: now(), status: "open",
+      });
+      await saveReports(reports.slice(0, 500));
+      return json({ ok: true });
+    }
+
     /* ===== الإدارة ===== */
     if (path.startsWith("/admin")) {
       // حماية من التخمين: 5 محاولات غلط = قفل 15 دقيقة لنفس الـ IP
@@ -440,6 +470,20 @@ export default async (req, context) => {
         }
       }
 
+      // بلاغات الروابط
+      if (path === "/admin/reports" && m === "GET") return json(await loadReports());
+      if (path === "/admin/reports/clear" && m === "POST") {
+        // حذف كل بلاغات رابط معيّن (بعد الإصلاح)
+        const reports = (await loadReports()).filter((r) => r.linkId !== clean(body.linkId, 20));
+        await saveReports(reports);
+        return json({ ok: true });
+      }
+      if ((mm = path.match(/^\/admin\/reports\/([^/]+)$/)) && m === "DELETE") {
+        const reports = (await loadReports()).filter((r) => r.id !== mm[1]);
+        await saveReports(reports);
+        return json({ ok: true });
+      }
+
       if (path === "/admin/settings" && m === "PUT") {
         const cur = await loadSettings();
         const next = { ...cur };
@@ -449,11 +493,12 @@ export default async (req, context) => {
       }
 
       if (path === "/admin/backup" && m === "GET") {
-        return json({ apps: await loadApps(), requests: await loadReqs(), settings: await loadSettings(), at: now() });
+        return json({ apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), settings: await loadSettings(), at: now() });
       }
       if (path === "/admin/restore" && m === "POST") {
         if (Array.isArray(body.apps)) await saveApps(body.apps);
         if (Array.isArray(body.requests)) await saveReqs(body.requests);
+        if (Array.isArray(body.reports)) await saveReports(body.reports);
         if (body.settings) await setJSON("data", "settings", body.settings);
         return json({ ok: true });
       }
