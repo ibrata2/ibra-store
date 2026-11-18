@@ -139,14 +139,18 @@ function normalizeApp(input, old = {}) {
     updatedAt: now(),
     downloads: old.downloads || 0,
     views: old.views || 0,
+    ratingSum: old.ratingSum || 0,
+    ratingCount: old.ratingCount || 0,
     clicks: oldClicks,
   };
 }
 
 const publicApp = (a) => {
-  const { clicks, mirrorLog, ...rest } = a;
-  return rest;
+  const { clicks, mirrorLog, ratingSum, ratingCount, ...rest } = a;
+  return { ...rest, rating: { avg: ratingCount ? +(ratingSum / ratingCount).toFixed(1) : 0, count: ratingCount || 0 } };
 };
+const loadRaters = () => getJSON("data", "raters", {});
+const saveRaters = (r) => setJSON("data", "raters", r);
 
 /* ---------- الطلبات (طلبات التطبيقات) ---------- */
 const publicReq = (r, viewer, appsById) => ({
@@ -198,7 +202,32 @@ export default async (req, context) => {
         a.views = (a.views || 0) + 1;
         await saveApps(apps);
       }
-      return json(publicApp(a));
+      const u0 = await getUser(req);
+      const viewer0 = u0 ? "u:" + u0.username : "ip:" + crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+      const raters0 = await loadRaters();
+      const out = publicApp(a);
+      out.rating.mine = raters0[a.id]?.[viewer0] || 0;
+      return json(out);
+    }
+
+    // تقييم بالنجوم
+    if ((mm = path.match(/^\/apps\/([^/]+)\/rate$/)) && m === "POST") {
+      const stars = Math.round(+body.stars);
+      if (!(stars >= 1 && stars <= 5)) return err("تقييم غير صحيح");
+      const apps = await loadApps();
+      const a = apps.find((x) => x.id === mm[1] && x.published);
+      if (!a) return err("غير موجود", 404);
+      const u = await getUser(req);
+      const viewer = u ? "u:" + u.username : "ip:" + crypto.createHash("sha256").update(ip).digest("hex").slice(0, 16);
+      const raters = await loadRaters();
+      const byApp = (raters[a.id] = raters[a.id] || {});
+      const prev = byApp[viewer] || 0;
+      a.ratingSum = (a.ratingSum || 0) + stars - prev;
+      if (!prev) a.ratingCount = (a.ratingCount || 0) + 1;
+      byApp[viewer] = stars;
+      await saveRaters(raters);
+      await saveApps(apps);
+      return json({ avg: a.ratingCount ? +(a.ratingSum / a.ratingCount).toFixed(1) : 0, count: a.ratingCount || 0, mine: stars });
     }
 
     // عدّاد التحميل + تحويل للرابط
@@ -495,12 +524,13 @@ export default async (req, context) => {
       }
 
       if (path === "/admin/backup" && m === "GET") {
-        return json({ apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), settings: await loadSettings(), at: now() });
+        return json({ apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), settings: await loadSettings(), at: now() });
       }
       if (path === "/admin/restore" && m === "POST") {
         if (Array.isArray(body.apps)) await saveApps(body.apps);
         if (Array.isArray(body.requests)) await saveReqs(body.requests);
         if (Array.isArray(body.reports)) await saveReports(body.reports);
+        if (body.raters && typeof body.raters === "object") await saveRaters(body.raters);
         if (body.settings) await setJSON("data", "settings", body.settings);
         return json({ ok: true });
       }
