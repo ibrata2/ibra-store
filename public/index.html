@@ -380,6 +380,7 @@ const view = $("#view");
 let S = {}, APPS = null, USER = null;
 let state = { q: "", plat: "all", cat: "all", view: null, layout: null, sort: "default" };
 let homeDraw = null;
+const appCats = (a) => (a.categories && a.categories.length ? a.categories : (a.category ? [a.category] : []));
 const VIEWS = {
   grid: { name: "مربعات", icon: I.grid },
   cover: { name: "صور", icon: I.image },
@@ -520,7 +521,7 @@ async function renderHome() {
   const totalDl = apps.reduce((s, a) => s + (a.downloads || 0), 0);
   const plats = [...new Set(apps.flatMap((a) => Object.keys(a.platforms || {})))];
   const catCount = {};
-  for (const a of apps) if (a.category) catCount[a.category] = (catCount[a.category] || 0) + 1;
+  for (const a of apps) for (const c of appCats(a)) catCount[c] = (catCount[c] || 0) + 1;
   const cats = Object.keys(catCount);
   const recent = [...apps].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 5);
   if (!state.view) { let v = null; try { v = localStorage.getItem("ib_view"); } catch {} state.view = v || S.view || "grid"; }
@@ -619,7 +620,7 @@ async function renderHome() {
     const q = state.q.trim().toLowerCase();
     let list = apps.filter((a) =>
       (state.plat === "all" || a.platforms?.[state.plat]) &&
-      (state.cat === "all" || a.category === state.cat) &&
+      (state.cat === "all" || appCats(a).includes(state.cat)) &&
       (!q || [a.name, a.tagline, a.description, a.category, ...(a.keywords || [])].join(" ").toLowerCase().includes(q)));
     if (state.sort === "downloads") list.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
     else if (state.sort === "new") list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
@@ -643,7 +644,7 @@ async function renderHome() {
       else if (state.view === "cover") { grid.className = "grid cover-grid"; grid.innerHTML = list.map(cardCover).join(""); }
       else if (state.view === "sections") {
         grid.className = "sections"; const g = {};
-        for (const a of list) (g[a.category || "غير مصنّف"] = g[a.category || "غير مصنّف"] || []).push(a);
+        for (const a of list) { const cs = appCats(a); (cs.length ? cs : ["غير مصنّف"]).forEach((c) => (g[c] = g[c] || []).push(a)); }
         grid.innerHTML = Object.entries(g).map(([c, arr]) => `<div class="cat-sec"><h2 class="cat-h">${esc(c)} <span class="chip" style="font-size:.72rem">${arr.length}</span></h2><div class="grid">${arr.map(cardGrid).join("")}</div></div>`).join("");
       } else { grid.className = "grid"; grid.innerHTML = list.map(cardGrid).join(""); }
       return;

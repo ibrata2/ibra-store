@@ -81,6 +81,10 @@ body{display:block}
 .tags span button svg{width:12px;height:12px}
 .tags input{flex:1;min-width:140px;background:none;border:0;outline:0;padding:4px}
 
+.cat-pick{display:flex;flex-wrap:wrap;gap:7px}
+.cat-pick .cp{padding:7px 13px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:600;font-size:.85rem;color:var(--muted);transition:.15s}
+.cat-pick .cp:hover{color:var(--text);border-color:var(--line)}
+.cat-pick .cp.on{color:var(--gold3);border-color:var(--gold);background:var(--gold-dim)}
 .plat-pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .plat-pick label{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:700;color:var(--muted);user-select:none}
 .plat-pick label svg{width:18px;height:18px}
@@ -309,6 +313,7 @@ function editApp(app) {
   const a = JSON.parse(JSON.stringify(app || { name: "", platforms: {}, screenshots: [], keywords: [], features: [], published: true }));
   a.platforms = a.platforms || {};
   a.platformNotes = a.platformNotes || {};
+  a.categories = a.categories && a.categories.length ? a.categories : (a.category ? [a.category] : []);
   const enabled = new Set(Object.keys(a.platforms));
   const cats = [...new Set(APPS.map((x) => x.category).filter(Boolean))];
 
@@ -325,7 +330,10 @@ function editApp(app) {
       <div class="field full"><label>وصف قصير (سطر واحد يظهر بالكارت)</label><input class="input" id="f_tagline" maxlength="200" value="${esc(a.tagline || "")}" placeholder="مشغل ميديا فخم بستايل زجاجي يدعم كل الصيغ"></div>
       <div class="field full"><label>مربع الشرح الكامل <span class="hint">— السطر اللي يبدأ بـ - يتحول لنقطة</span></label><textarea class="input" id="f_description" style="min-height:200px">${esc(a.description || "")}</textarea></div>
       <div class="field full"><label>المميزات (كل ميزة بسطر)</label><textarea class="input" id="f_features">${esc((a.features || []).join("\n"))}</textarea></div>
-      <div class="field"><label>القسم</label><input class="input" id="f_category" list="cats" value="${esc(a.category || "")}" placeholder="برامج / ألعاب / أدوات…"><datalist id="cats">${["برامج", "ألعاب", "أدوات", "ميديا", "تصميم", "تعليم", ...cats].filter((v, i, s) => s.indexOf(v) === i).map((c) => `<option value="${esc(c)}">`).join("")}</datalist></div>
+      <div class="field full"><label>الأقسام <span class="hint">— يمكن اختيار أكثر من قسم للبرنامج الواحد. اضغط القسم لإضافته/إزالته، أو اكتب قسم جديد</span></label>
+        <div class="cat-pick" id="catPick"></div>
+        <div class="tags" id="catTags" style="margin-top:8px"><input id="catIn" placeholder="أو اكتب قسم جديد واضغط Enter"></div>
+      </div>
       <div class="field"><label>الإصدار</label><input class="input" id="f_version" dir="ltr" value="${esc(a.version || "")}" placeholder="1.0.0"></div>
       <div class="field"><label>الحجم</label><input class="input" id="f_size" value="${esc(a.size || "")}" placeholder="85 MB"></div>
       <div class="field"><label>اللغة</label><input class="input" id="f_language" value="${esc(a.language || "")}" placeholder="عربي / إنكليزي"></div>
@@ -395,6 +403,28 @@ function editApp(app) {
   $("#tagIn").onblur = (e) => { if (e.target.value) { addTags(e.target.value); e.target.value = ""; } };
   $("#tagIn").onpaste = (e) => { e.preventDefault(); addTags(e.clipboardData.getData("text")); };
   drawTags();
+
+  /* الأقسام (متعددة) */
+  const SUGGESTED_CATS = ["برامج الوسائط", "الإنترنت والتحميل", "الأمن والحماية", "أدوات النظام", "التصميم والجرافيك", "المكتب والإنتاجية", "الألعاب", "تطبيقات الأندرويد", "تطبيقات آيفون", "المتصفحات", "المحوّلات والأدوات", "تطبيقات التلفزيون"];
+  const allCats = [...new Set([...SUGGESTED_CATS, ...cats])];
+  const drawCatTags = () => {
+    $$("#catTags span").forEach((s) => s.remove());
+    a.categories.forEach((c, i) => {
+      const s = document.createElement("span");
+      s.innerHTML = `${esc(c)}<button title="حذف">${I.x}</button>`;
+      s.querySelector("button").onclick = () => { a.categories.splice(i, 1); drawCats(); };
+      $("#catTags").insertBefore(s, $("#catIn"));
+    });
+  };
+  const drawPick = () => {
+    $("#catPick").innerHTML = allCats.map((c) => `<button type="button" class="cp ${a.categories.includes(c) ? "on" : ""}" data-c="${esc(c)}">${a.categories.includes(c) ? "✔ " : "+ "}${esc(c)}</button>`).join("");
+  };
+  const drawCats = () => { drawPick(); drawCatTags(); };
+  $("#catPick").onclick = (e) => { const b = e.target.closest("[data-c]"); if (!b) return; const c = b.dataset.c; const i = a.categories.indexOf(c); if (i >= 0) a.categories.splice(i, 1); else a.categories.push(c); dirty = true; drawCats(); };
+  const addCat = (v) => { v.split(/[,،\n]/).map((x) => x.trim()).filter(Boolean).forEach((c) => { if (!a.categories.includes(c)) a.categories.push(c); if (!allCats.includes(c)) allCats.push(c); }); dirty = true; drawCats(); };
+  $("#catIn").onkeydown = (e) => { if (e.key === "Enter" || e.key === "," || e.key === "،") { e.preventDefault(); addCat(e.target.value); e.target.value = ""; } };
+  $("#catIn").onblur = (e) => { if (e.target.value) { addCat(e.target.value); e.target.value = ""; } };
+  drawCats();
 
   /* الأيقونة والغلاف */
   const drawOne = () => {
@@ -597,7 +627,7 @@ function editApp(app) {
     return {
       ...a, name: g("name"), slug: g("slug"), tagline: g("tagline"), description: g("description"),
       features: g("features").split("\n").map((x) => x.trim()).filter(Boolean),
-      category: g("category"), version: g("version"), size: g("size"), language: g("language"),
+      categories: a.categories, category: a.categories[0] || "", version: g("version"), size: g("size"), language: g("language"),
       requirements: g("requirements"), changelog: g("changelog"), video: g("video"),
       published: $("#f_published").checked, featured: $("#f_featured").checked, platforms,
     };

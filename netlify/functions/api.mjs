@@ -110,6 +110,8 @@ function normalizeApp(input, old = {}) {
     const n = clean(input.platformNotes?.[p], 400);
     if (n && platforms[p]) platformNotes[p] = n;
   }
+  let categories = Array.isArray(input.categories) ? input.categories : (input.category ? [input.category] : []);
+  categories = [...new Set(categories.map((c) => clean(c, 60)).filter(Boolean))].slice(0, 8);
   return {
     id: old.id || uid(10),
     slug: slugify(input.slug || input.name || old.slug),
@@ -117,7 +119,8 @@ function normalizeApp(input, old = {}) {
     tagline: clean(input.tagline, 200),
     description: clean(input.description, 20000),
     features: (Array.isArray(input.features) ? input.features : []).map((f) => clean(f, 200)).filter(Boolean).slice(0, 40),
-    category: clean(input.category, 60),
+    category: categories[0] || "",
+    categories,
     version: clean(input.version, 40),
     size: clean(input.size, 40),
     language: clean(input.language, 60),
