@@ -58,6 +58,7 @@ const DEFAULT_SETTINGS = {
   notice: "",
   theme: "gold",
   view: "grid",
+  layout: "classic",
 };
 
 /* ---------- صلاحيات ---------- */

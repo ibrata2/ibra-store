@@ -758,12 +758,15 @@ function drawSettings() {
   ];
   const curTheme = SET.theme || "gold";
   const curView = SET.view || "grid";
+  const curLayout = SET.layout || "classic";
   const VIEWNAMES = { grid: "مربعات", cover: "صور غلاف", list: "قائمة", sections: "أقسام" };
+  const LAYNAMES = { classic: "بسيط (الحالي)", d1: "تصميم ١ — شبكة + أقسام جانبية", d2: "تصميم ٢ — تصنيفات + مميزة + أحدث", d3: "تصميم ٣ — فلاتر + صف برامج" };
   main.innerHTML = `<div class="topbar"><h1>إعدادات الموقع</h1></div>
-    <div class="sec glass"><h2>${I.palette} ثيم الموقع الافتراضي <small>— اللي يشوفه الزائر أول مرة (يكدر يغيّره من زر الثيم)</small></h2>
+    <div class="sec glass"><h2>${I.palette} شكل الموقع الافتراضي <small>— اللي يشوفه الزائر أول مرة (يكدر يغيّره بنفسه)</small></h2>
       <div class="ed-grid">
-        <div class="field"><label>الثيم</label><select class="input" id="s_theme">${Object.entries(IB.THEMES).map(([k, [name]]) => `<option value="${k}" ${k === curTheme ? "selected" : ""}>${name}</option>`).join("")}</select></div>
-        <div class="field"><label>طريقة عرض البرامج الافتراضية</label><select class="input" id="s_view">${Object.entries(VIEWNAMES).map(([k, name]) => `<option value="${k}" ${k === curView ? "selected" : ""}>${name}</option>`).join("")}</select></div>
+        <div class="field full"><label>تصميم/ترتيب الصفحة الرئيسية</label><select class="input" id="s_layout">${Object.entries(LAYNAMES).map(([k, name]) => `<option value="${k}" ${k === curLayout ? "selected" : ""}>${name}</option>`).join("")}</select></div>
+        <div class="field"><label>الثيم (الألوان)</label><select class="input" id="s_theme">${Object.entries(IB.THEMES).map(([k, [name]]) => `<option value="${k}" ${k === curTheme ? "selected" : ""}>${name}</option>`).join("")}</select></div>
+        <div class="field"><label>عرض البرامج بالتصميم البسيط</label><select class="input" id="s_view">${Object.entries(VIEWNAMES).map(([k, name]) => `<option value="${k}" ${k === curView ? "selected" : ""}>${name}</option>`).join("")}</select></div>
       </div>
     </div>
     <div class="sec glass"><div class="ed-grid">${F.map(([k, l, ta, ltr]) => `<div class="field ${ta ? "full" : ""}"><label>${l}</label>${ta ? `<textarea class="input" id="s_${k}">${esc(SET[k] || "")}</textarea>` : `<input class="input" id="s_${k}" ${ltr ? 'dir="ltr"' : ""} value="${esc(SET[k] || "")}">`}</div>`).join("")}</div></div>
@@ -772,6 +775,7 @@ function drawSettings() {
     const body = Object.fromEntries(F.map(([k]) => [k, $("#s_" + k).value]));
     body.theme = $("#s_theme").value;
     body.view = $("#s_view").value;
+    body.layout = $("#s_layout").value;
     try { SET = await api("/admin/settings", { method: "PUT", body }); toast("انحفظت ✔"); } catch (er) { toast(er.message, true); }
   };
 }

@@ -39,7 +39,28 @@ const IB = (() => {
     palette: ico('<circle cx="13.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="17.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="6.5" cy="12.5" r="1.2" fill="currentColor"/><path d="M12 3a9 9 0 1 0 0 18 2 2 0 0 0 2-2 2 2 0 0 1 2-2h1a4 4 0 0 0 4-4 9 9 0 0 0-9-8z"/>'),
     info: ico('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
     warn: ico('<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>'),
+    folder: ico('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+    shield: ico('<path d="M12 3 5 6v5c0 4 3 7 7 9 4-2 7-5 7-9V6z"/>'),
+    gamepad: ico('<rect x="2.5" y="8" width="19" height="9" rx="4"/><path d="M8 11.5v3M6.5 13h3M15.5 12.5h.01M18 14h.01"/>'),
+    clock: ico('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+    fire: ico('<path d="M12 3c1 3-1 4-1 6a3 3 0 0 0 5 1c1 3-1 7-4 7a5 5 0 0 1-5-5c0-3 3-4 5-9z"/>'),
+    medal: ico('<circle cx="12" cy="14" r="6"/><path d="M8.5 9 7 3h10l-1.5 6M12 11.5l1 2 2 .2-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L9 13.7l2-.2z"/>'),
+    rows: ico('<rect x="3" y="4" width="18" height="5" rx="1.5"/><rect x="3" y="12" width="18" height="5" rx="1.5"/>'),
+    layout: ico('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16M3 10h12"/>'),
   };
+
+  // أيقونة القسم حسب اسمه
+  function catIcon(cat) {
+    const c = String(cat || "").toLowerCase();
+    if (/(لعب|العاب|ألعاب|game)/.test(c)) return icons.gamepad;
+    if (/(أدوات|ادوات|اداة|tool|system|نظام)/.test(c)) return icons.gear;
+    if (/(تصميم|design|جراف|graphic|صور|photo)/.test(c)) return icons.image;
+    if (/(وسائط|ميديا|media|فيديو|صوت|مشغل|player)/.test(c)) return icons.play;
+    if (/(انترنت|إنترنت|internet|متصفح|browser|شبك|network)/.test(c)) return icons.web;
+    if (/(حماية|أمن|امن|secur|antivir|protect)/.test(c)) return icons.shield;
+    if (/(مكتب|office|انتاج|إنتاج|product)/.test(c)) return icons.grid;
+    return icons.folder;
+  }
 
   const THEMES = {
     gold: ["الأصلي — ذهبي أسود", "sw-gold"],
@@ -176,5 +197,18 @@ const IB = (() => {
     toast("تم النسخ ✔");
   }
 
-  return { icons, PLATFORMS, HOSTS, THEMES, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker };
+  // وقت نسبي: منذ ٣ ساعات / أمس / منذ ٥ أيام
+  function fmtAgo(iso) {
+    try {
+      const d = (Date.now() - Date.parse(iso)) / 1000;
+      if (d < 60) return "الآن";
+      if (d < 3600) return "منذ " + Math.floor(d / 60) + " دقيقة";
+      if (d < 86400) return "منذ " + Math.floor(d / 3600) + " ساعة";
+      if (d < 172800) return "أمس";
+      if (d < 2592000) return "منذ " + Math.floor(d / 86400) + " يوم";
+      return fmtDate(iso);
+    } catch { return ""; }
+  }
+
+  return { icons, PLATFORMS, HOSTS, THEMES, catIcon, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker };
 })();

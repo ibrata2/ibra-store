@@ -66,6 +66,91 @@
 .cat-sec{margin-bottom:32px}
 .cat-h{font-family:var(--head);font-size:1.3rem;margin-bottom:14px;display:flex;align-items:center;gap:10px}
 .cat-h::before{content:"";width:5px;height:22px;border-radius:3px;background:linear-gradient(var(--gold3),var(--gold2))}
+
+/* ===== شريط اختيار التصميم ===== */
+.laybar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 0 2px}
+.laybar .lbt{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-weight:700;font-size:.85rem;margin-inline-end:4px}
+.laybar .lbt svg{width:17px;height:17px;color:var(--gold)}
+.laybar button{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);cursor:pointer;font-weight:700;font-size:.82rem;transition:.2s}
+.laybar button svg{width:16px;height:16px}
+.laybar button:hover{color:var(--text)}
+.laybar button.on{color:var(--gold3);border-color:var(--gold);background:var(--gold-dim)}
+@media(max-width:560px){.laybar .vbl{display:none}}
+
+/* ===== شارات المميزات + رقائق القسم بالهيرو ===== */
+.badges{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;margin-top:22px}
+.badges span{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.9rem;font-weight:600}
+.badges svg{width:18px;height:18px;color:var(--gold)}
+.hero-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 auto 20px;max-width:720px}
+.hero-chips button{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);color:var(--text);cursor:pointer;font-weight:600;font-size:.86rem;transition:.2s}
+.hero-chips button svg{width:16px;height:16px;color:var(--gold)}
+.hero-chips button:hover{border-color:var(--gold);background:var(--gold-dim);color:var(--gold3)}
+
+/* ===== شريط الأقسام الأفقي ===== */
+.catstrip{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 18px;scrollbar-width:none}
+.catstrip::-webkit-scrollbar{display:none}
+.catstrip .cs{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;width:104px;padding:16px 10px;border-radius:16px;border:1px solid var(--line2);background:var(--glass-grad);cursor:pointer;color:var(--text);font-weight:700;font-size:.85rem;transition:.25s;backdrop-filter:blur(12px)}
+.catstrip .cs svg{width:26px;height:26px;color:var(--gold)}
+.catstrip .cs:hover{transform:translateY(-3px);border-color:var(--line)}
+.catstrip .cs.on{background:linear-gradient(145deg,var(--gold-dim),transparent);border-color:var(--gold);color:var(--gold3)}
+.catstrip .cs.on svg{color:var(--gold3)}
+
+/* ===== شريط الإحصائيات ===== */
+.statsbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:22px;margin:4px 0 8px;text-align:center}
+.statsbar b{display:block;font-family:var(--head);font-size:1.7rem}
+.statsbar span{color:var(--dim);font-size:.85rem}
+@media(max-width:560px){.statsbar{grid-template-columns:repeat(2,1fr);gap:18px}}
+
+/* ===== عناوين الأقسام ===== */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-head h2{font-family:var(--head);font-size:1.35rem;display:flex;align-items:center;gap:10px}
+.sec-head h2 svg{width:22px;height:22px;color:var(--gold)}
+
+/* ===== القوائم الجانبية ===== */
+.side-box{padding:18px}
+.side-box .sb-h{font-family:var(--head);font-size:1.1rem;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+.side-box .sb-h svg{width:20px;height:20px;color:var(--gold)}
+.catlist,.sortlist{display:flex;flex-direction:column;gap:4px}
+.catlist button,.sortlist button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;border-radius:11px;border:0;background:none;cursor:pointer;color:var(--text);font-weight:600;font-size:.92rem;text-align:start;transition:.15s;width:100%}
+.catlist button span,.sortlist button{display:flex;align-items:center;gap:9px}
+.catlist button svg,.sortlist button svg{width:17px;height:17px;color:var(--gold)}
+.catlist button b{color:var(--dim);font-size:.8rem;font-weight:700}
+.catlist button:hover,.sortlist button:hover{background:var(--panel)}
+.catlist button.on,.sortlist button.on{background:var(--gold-dim);color:var(--gold3)}
+.catlist button.on b{color:var(--gold3)}
+.recentlist{display:flex;flex-direction:column;gap:6px}
+.ritem{display:flex;align-items:center;gap:12px;padding:9px;border-radius:12px;cursor:pointer;transition:.15s}
+.ritem:hover{background:var(--panel)}
+.ritem .app-icon{width:44px;height:44px;border-radius:12px;font-size:1.1rem}
+.ritem b{display:block;font-size:.93rem}
+.ritem small{color:var(--dim);font-size:.78rem}
+.dlcounter{margin-top:16px;padding:16px;border-radius:14px;background:var(--gold-dim);border:1px solid var(--line);text-align:center}
+.dlcounter span{display:block;color:var(--muted);font-size:.85rem;margin-bottom:4px}
+.dlcounter b{font-family:var(--head);font-size:1.7rem}
+
+/* ===== شبكات التصاميم ===== */
+.d1wrap{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px;align-items:start}
+.d2wrap{display:grid;grid-template-columns:250px minmax(0,1fr) 260px;gap:20px;align-items:start}
+.d3wrap{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:22px;align-items:start}
+.d1wrap>*,.d2wrap>*,.d3wrap>*{min-width:0}
+.d2wrap .side-box,.d1wrap aside .side-box,.d3wrap aside .side-box{position:sticky;top:84px}
+@media(max-width:1040px){.d2wrap{grid-template-columns:240px minmax(0,1fr)}.d2wrap>aside:last-child{display:none}}
+@media(max-width:840px){.d1wrap,.d2wrap,.d3wrap{grid-template-columns:1fr}.d1wrap aside,.d2wrap>aside,.d3wrap aside{order:-1}.d3wrap aside{order:1}.side-box{position:static!important}}
+
+/* ===== بطاقة المتجر (للتصاميم) ===== */
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.store-grid.tight{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.scard{position:relative;padding:20px 16px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;cursor:pointer;transition:.3s cubic-bezier(.2,.7,.2,1);overflow:hidden}
+.scard:hover{transform:translateY(-5px);border-color:var(--line)}
+.scard .ribbon{position:absolute;top:12px;inset-inline-start:-30px;transform:rotate(-45deg);background:linear-gradient(135deg,var(--acc-hi),var(--gold));color:var(--on-accent);font-size:.68rem;font-weight:800;padding:3px 34px}
+.scard .si .app-icon{width:70px;height:70px;border-radius:19px;font-size:1.9rem}
+.scard h3{font-size:1.05rem;line-height:1.3}
+.scard p{color:var(--muted);font-size:.83rem;min-height:2.4em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.scard .smeta{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:2px 0 6px}
+.scard .smeta .plat-icons span{width:26px;height:26px}
+.scard .smeta .plat-icons svg{width:14px;height:14px}
+.scard .dl-count{font-size:.78rem}
+.scard .dlbtn{width:100%;margin-top:auto}
 .card{padding:20px;display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:.3s cubic-bezier(.2,.7,.2,1);position:relative;overflow:hidden}
 .card::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(140deg,var(--gold),transparent 40%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:.3s}
 .card:hover{transform:translateY(-4px)}
@@ -248,16 +333,22 @@
 
 <script src="/shared.js"></script>
 <script>
-const { icons: I, PLATFORMS, HOSTS, esc, api, toast, fmtDate, fmtNum, copy, videoEmbed } = IB;
+const { icons: I, PLATFORMS, HOSTS, catIcon, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, videoEmbed } = IB;
 const $ = (s, r = document) => r.querySelector(s);
 const view = $("#view");
 let S = {}, APPS = null, USER = null;
-let state = { q: "", plat: "all", cat: "all", view: null };
+let state = { q: "", plat: "all", cat: "all", view: null, layout: null, sort: "default" };
 const VIEWS = {
   grid: { name: "مربعات", icon: I.grid },
   cover: { name: "صور", icon: I.image },
   list: { name: "قائمة", icon: I.menu },
   sections: { name: "أقسام", icon: I.tag },
+};
+const LAYOUTS = {
+  d1: { name: "تصميم ١", icon: I.layout },
+  d2: { name: "تصميم ٢", icon: I.grid },
+  d3: { name: "تصميم ٣", icon: I.rows },
+  classic: { name: "بسيط", icon: I.menu },
 };
 
 $("#yr").textContent = new Date().getFullYear();
@@ -308,69 +399,143 @@ const iconHTML = (a) => a.icon ? `<div class="app-icon"><img src="${esc(a.icon)}
 const platIcons = (a) => `<div class="plat-icons">${Object.keys(a.platforms || {}).map((p) => `<span title="${PLATFORMS[p]?.name || p}">${I[p] || I.download}</span>`).join("")}</div>`;
 
 /* ---------- الرئيسية ---------- */
+/* ===== بطاقات البرامج ===== */
+const cardGrid = (a, i = 0) => `
+  <article class="card glass fade" style="animation-delay:${Math.min(i, 12) * 40}ms" data-slug="${esc(a.slug)}">
+    ${a.featured ? '<span class="badge-feat">مميز</span>' : ""}
+    <div class="top">${iconHTML(a)}<div><h3>${esc(a.name)}</h3>${a.category ? `<span class="chip" style="margin-top:4px">${esc(a.category)}</span>` : ""}</div></div>
+    <p class="tag">${esc(a.tagline || a.description?.slice(0, 120) || "")}</p>
+    <div class="bottom">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span></div>
+  </article>`;
+const cardStore = (a, i = 0) => `
+  <article class="scard glass fade" style="animation-delay:${Math.min(i, 12) * 40}ms" data-slug="${esc(a.slug)}">
+    ${a.featured ? '<span class="ribbon">مميز</span>' : ""}
+    <div class="si">${iconHTML(a)}</div>
+    <h3>${esc(a.name)}</h3>
+    <p>${esc(a.tagline || a.description?.slice(0, 70) || "")}</p>
+    <div class="smeta"><span>${platIcons(a)}</span><span class="dl-count">${I.download}${fmtNum(a.downloads)}</span>${a.size ? `<span class="chip">${esc(a.size)}</span>` : ""}</div>
+    <span class="btn gold sm dlbtn">${I.download} تحميل الآن</span>
+  </article>`;
+const cardCover = (a, i = 0) => `
+  <article class="card ccard glass fade" style="animation-delay:${Math.min(i, 12) * 40}ms" data-slug="${esc(a.slug)}">
+    ${a.featured ? '<span class="badge-feat" style="z-index:2">مميز</span>' : ""}
+    <div class="cv" style="background-image:url('${esc(a.cover || a.screenshots?.[0] || a.icon || "")}')"></div>
+    <div class="cbody">
+      <div class="top">${iconHTML(a)}<div><h3>${esc(a.name)}</h3>${a.category ? `<span class="chip" style="margin-top:4px">${esc(a.category)}</span>` : ""}</div></div>
+      <p class="tag">${esc(a.tagline || a.description?.slice(0, 120) || "")}</p>
+      <div class="bottom">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span></div>
+    </div>
+  </article>`;
+const rowList = (a) => `
+  <article class="lrow glass fade" data-slug="${esc(a.slug)}">
+    ${iconHTML(a)}
+    <div class="lx"><h3>${esc(a.name)} ${a.featured ? '<span class="chip gold" style="font-size:.7rem">مميز</span>' : ""}</h3><p>${esc(a.tagline || a.description?.slice(0, 160) || "")}</p>
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">${a.category ? `<span class="chip">${esc(a.category)}</span>` : ""}${a.version ? `<span class="chip">${esc(a.version)}</span>` : ""}</div></div>
+    <div class="lr">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span><span class="btn gold sm">تحميل</span></div>
+  </article>`;
+
 async function renderHome() {
   setMeta(`${S.siteName} — ${S.siteSubtitle}`, S.heroText);
   if (!APPS) view.innerHTML = '<div class="spinner"></div>';
   const apps = await loadApps();
   const totalDl = apps.reduce((s, a) => s + (a.downloads || 0), 0);
   const plats = [...new Set(apps.flatMap((a) => Object.keys(a.platforms || {})))];
-  const cats = [...new Set(apps.map((a) => a.category).filter(Boolean))];
-  const feat = apps.find((a) => a.featured);
+  const catCount = {};
+  for (const a of apps) if (a.category) catCount[a.category] = (catCount[a.category] || 0) + 1;
+  const cats = Object.keys(catCount);
+  const recent = [...apps].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 5);
   if (!state.view) { let v = null; try { v = localStorage.getItem("ib_view"); } catch {} state.view = v || S.view || "grid"; }
+  if (!state.layout) { let l = null; try { l = localStorage.getItem("ib_layout"); } catch {} state.layout = l || S.layout || "classic"; }
+  const L = state.layout;
 
-  view.innerHTML = `
-  <section class="hero fade">
-    <div class="eyebrow">${I.star.replace("<svg", '<svg width="16" height="16"')} كل البرامج مجانية</div>
-    <h1><span class="gold-text">${esc(S.heroTitle)}</span></h1>
-    <p>${esc(S.heroText)}</p>
-    <div class="searchbar glass">${I.search}<input id="q" placeholder="ابحث باسم البرنامج أو كلمة مفتاحية…" value="${esc(state.q)}"></div>
-    ${S.notice ? `<div class="notice">${esc(S.notice)}</div>` : ""}
-    <div class="stats">
-      <div><b class="gold-text">${apps.length}</b><span>برنامج وتطبيق</span></div>
-      <div><b class="gold-text">${fmtNum(totalDl)}</b><span>تحميل</span></div>
-      <div><b class="gold-text">${plats.length || 0}</b><span>منصة</span></div>
-    </div>
-  </section>
-  <section class="section" style="padding-top:10px">
-    <div class="filters" id="pf">
-      <button data-p="all" class="${state.plat === "all" ? "on" : ""}">${I.grid} الكل</button>
-      ${Object.keys(PLATFORMS).filter((p) => plats.includes(p)).map((p) => `<button data-p="${p}" class="${state.plat === p ? "on" : ""}">${I[p]} ${PLATFORMS[p].name}</button>`).join("")}
-    </div>
-    ${cats.length > 1 ? `<div class="filters" id="cf">
-      <button data-c="all" class="${state.cat === "all" ? "on" : ""}">كل الأقسام</button>
-      ${cats.map((c) => `<button data-c="${esc(c)}" class="${state.cat === c ? "on" : ""}">${esc(c)}</button>`).join("")}
-    </div>` : ""}
-    <div class="viewbar" id="vb">
-      ${Object.entries(VIEWS).map(([k, v]) => `<button data-view="${k}" class="${state.view === k ? "on" : ""}" title="${v.name}">${v.icon}<span class="vbl">${v.name}</span></button>`).join("")}
-    </div>
-    <div id="featBox"></div>
-    <div class="grid" id="grid"></div>
-  </section>`;
-
-  const cardGrid = (a, i) => `
-    <article class="card glass fade" style="animation-delay:${Math.min(i, 12) * 40}ms" data-slug="${esc(a.slug)}">
-      ${a.featured ? '<span class="badge-feat">مميز</span>' : ""}
-      <div class="top">${iconHTML(a)}<div><h3>${esc(a.name)}</h3>${a.category ? `<span class="chip" style="margin-top:4px">${esc(a.category)}</span>` : ""}</div></div>
-      <p class="tag">${esc(a.tagline || a.description?.slice(0, 120) || "")}</p>
-      <div class="bottom">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span></div>
-    </article>`;
-  const cardCover = (a, i) => `
-    <article class="card ccard glass fade" style="animation-delay:${Math.min(i, 12) * 40}ms" data-slug="${esc(a.slug)}">
-      ${a.featured ? '<span class="badge-feat" style="z-index:2">مميز</span>' : ""}
-      <div class="cv" style="background-image:url('${esc(a.cover || a.screenshots?.[0] || a.icon || "")}')"></div>
-      <div class="cbody">
-        <div class="top">${iconHTML(a)}<div><h3>${esc(a.name)}</h3>${a.category ? `<span class="chip" style="margin-top:4px">${esc(a.category)}</span>` : ""}</div></div>
-        <p class="tag">${esc(a.tagline || a.description?.slice(0, 120) || "")}</p>
-        <div class="bottom">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span></div>
+  /* ---- كتل مشتركة ---- */
+  const hero = (withChips) => `
+    <section class="hero fade">
+      <div class="eyebrow">${I.star.replace("<svg", '<svg width="16" height="16"')} كل البرامج مجانية</div>
+      <h1><span class="gold-text">${esc(S.heroTitle)}</span></h1>
+      <p>${esc(S.heroText)}</p>
+      ${withChips && cats.length ? `<div class="hero-chips">${cats.slice(0, 7).map((c) => `<button data-c="${esc(c)}">${catIcon(c)} ${esc(c)}</button>`).join("")}</div>` : ""}
+      <div class="searchbar glass">${I.search}<input id="q" placeholder="ابحث عن برنامج، لعبة أو أداة…" value="${esc(state.q)}"></div>
+      ${S.notice ? `<div class="notice">${esc(S.notice)}</div>` : ""}
+      <div class="badges">
+        <span>${I.shield} مواقع آمنة</span><span>${I.download} روابط مباشرة</span>
+        <span>${I.fire} تحميل سريع</span><span>${I.windows} متوافق مع ويندوز</span><span>${I.gear} تحديثات مستمرة</span>
       </div>
-    </article>`;
-  const rowList = (a) => `
-    <article class="lrow glass fade" data-slug="${esc(a.slug)}">
-      ${iconHTML(a)}
-      <div class="lx"><h3>${esc(a.name)} ${a.featured ? '<span class="chip gold" style="font-size:.7rem">مميز</span>' : ""}</h3><p>${esc(a.tagline || a.description?.slice(0, 160) || "")}</p>
-        <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">${a.category ? `<span class="chip">${esc(a.category)}</span>` : ""}${a.version ? `<span class="chip">${esc(a.version)}</span>` : ""}</div></div>
-      <div class="lr">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span><span class="btn gold sm">تحميل</span></div>
-    </article>`;
+    </section>`;
+  const catStrip = () => cats.length ? `
+    <div class="catstrip">
+      <button data-c="all" class="cs ${state.cat === "all" ? "on" : ""}">${I.grid}<span>جميع الأقسام</span></button>
+      ${cats.map((c) => `<button data-c="${esc(c)}" class="cs ${state.cat === c ? "on" : ""}">${catIcon(c)}<span>${esc(c)}</span></button>`).join("")}
+    </div>` : "";
+  const statsBar = () => `
+    <section class="statsbar glass fade">
+      <div><b class="gold-text">${fmtNum(totalDl)}+</b><span>تحميل</span></div>
+      <div><b class="gold-text">${apps.length}+</b><span>برنامج</span></div>
+      <div><b class="gold-text">${plats.length}</b><span>منصة</span></div>
+      <div><b class="gold-text">100%</b><span>آمن</span></div>
+    </section>`;
+  const catSidebar = () => `
+    <aside class="side-box glass">
+      <h3 class="sb-h">${I.folder} التصنيفات</h3>
+      <div class="catlist">
+        <button data-c="all" class="${state.cat === "all" ? "on" : ""}"><span>${I.grid} كل البرامج</span><b>${apps.length}</b></button>
+        ${cats.map((c) => `<button data-c="${esc(c)}" class="${state.cat === c ? "on" : ""}"><span>${catIcon(c)} ${esc(c)}</span><b>${catCount[c]}</b></button>`).join("")}
+      </div>
+    </aside>`;
+  const recentSidebar = () => `
+    <aside class="side-box glass">
+      <h3 class="sb-h">${I.clock} أحدث الإضافات</h3>
+      <div class="recentlist">
+        ${recent.map((a) => `<a class="ritem" data-slug="${esc(a.slug)}">${iconHTML(a)}<div><b>${esc(a.name)}</b><small>${fmtAgo(a.updatedAt || a.createdAt)}</small></div></a>`).join("")}
+      </div>
+    </aside>`;
+  const SORTS = { default: ["المميزة", I.star], downloads: ["الأكثر تحميلاً", I.fire], new: ["أحدث الإضافات", I.clock], featured: ["الموصى بها", I.medal] };
+  const filterSidebar = () => `
+    <aside class="side-box glass">
+      <h3 class="sb-h">${I.layout} تصفية</h3>
+      <div class="sortlist">
+        ${Object.entries(SORTS).map(([k, [n, ic]]) => `<button data-sort="${k}" class="${state.sort === k ? "on" : ""}">${ic} ${n}</button>`).join("")}
+      </div>
+      <div class="dlcounter"><span>إجمالي التحميلات</span><b class="gold-text">${fmtNum(totalDl)}+</b></div>
+    </aside>`;
+
+  /* ---- هيكل حسب التصميم ---- */
+  const laybar = `<div class="laybar"><span class="lbt">${I.layout} التصميم:</span>${Object.entries(LAYOUTS).map(([k, v]) => `<button data-layout="${k}" class="${L === k ? "on" : ""}">${v.icon}<span class="vbl">${v.name}</span></button>`).join("")}</div>`;
+  const viewbar = L === "classic" ? `<div class="viewbar" id="vb">${Object.entries(VIEWS).map(([k, v]) => `<button data-view="${k}" class="${state.view === k ? "on" : ""}" title="${v.name}">${v.icon}<span class="vbl">${v.name}</span></button>`).join("")}</div>` : "";
+  const platRow = `<div class="filters" id="pf"><button data-p="all" class="${state.plat === "all" ? "on" : ""}">${I.grid} الكل</button>${Object.keys(PLATFORMS).filter((p) => plats.includes(p)).map((p) => `<button data-p="${p}" class="${state.plat === p ? "on" : ""}">${I[p]} ${PLATFORMS[p].name}</button>`).join("")}</div>`;
+  const headRow = (title, icon) => `<div class="sec-head"><h2>${icon || I.fire} ${title}</h2></div>`;
+
+  let body;
+  if (L === "d1") {
+    body = hero(false) + catStrip() + `
+      <section class="section d1wrap">
+        <aside>${catSidebar()}</aside>
+        <div class="d1main">${headRow("أحدث البرامج", I.fire)}${platRow}<div class="grid" id="grid"></div></div>
+      </section>` + statsBar();
+  } else if (L === "d2") {
+    body = hero(false) + catStrip() + `
+      <section class="section d2wrap">
+        ${catSidebar()}
+        <div class="d2main">${headRow("البرامج المميزة", I.star)}${platRow}<div class="grid" id="grid"></div></div>
+        ${recentSidebar()}
+      </section>`;
+  } else if (L === "d3") {
+    body = hero(true) + catStrip() + `
+      <section class="section d3wrap">
+        <div class="d3main">${headRow("أحدث البرامج المضافة", I.clock)}${platRow}<div class="grid" id="grid"></div></div>
+        <aside>${filterSidebar()}</aside>
+      </section>`;
+  } else {
+    body = hero(false) + statsBar() + `
+      <section class="section" style="padding-top:18px">
+        ${platRow}
+        ${cats.length > 1 ? `<div class="filters" id="cf"><button data-c="all" class="${state.cat === "all" ? "on" : ""}">كل الأقسام</button>${cats.map((c) => `<button data-c="${esc(c)}" class="${state.cat === c ? "on" : ""}">${esc(c)}</button>`).join("")}</div>` : ""}
+        ${viewbar}
+        <div id="featBox"></div>
+        <div class="grid" id="grid"></div>
+      </section>`;
+  }
+  view.innerHTML = laybar + body;
 
   const draw = () => {
     const q = state.q.trim().toLowerCase();
@@ -378,38 +543,56 @@ async function renderHome() {
       (state.plat === "all" || a.platforms?.[state.plat]) &&
       (state.cat === "all" || a.category === state.cat) &&
       (!q || [a.name, a.tagline, a.description, a.category, ...(a.keywords || [])].join(" ").toLowerCase().includes(q)));
-    const showFeat = feat && !q && state.plat === "all" && state.cat === "all" && state.view !== "list";
-    $("#featBox").innerHTML = showFeat ? `
-      <div class="featured glass fade" data-slug="${esc(feat.slug)}">
-        <div class="media" style="background-image:url('${esc(feat.cover || feat.screenshots?.[0] || feat.icon || "")}')"></div>
-        <div class="info">
-          <span class="chip gold" style="align-self:flex-start">${I.star} البرنامج المميز</span>
-          <div style="display:flex;gap:14px;align-items:center">${iconHTML(feat)}<h2>${esc(feat.name)}</h2></div>
-          <p class="sub">${esc(feat.tagline)}</p>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${platIcons(feat)}<span class="btn gold">${I.download} تحميل</span></div>
-        </div>
-      </div>` : "";
-    if (showFeat) list = list.filter((a) => a.id !== feat.id);
+    if (state.sort === "downloads") list.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+    else if (state.sort === "new") list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    else if (state.sort === "featured") list.sort((a, b) => (b.featured - a.featured) || (b.downloads || 0) - (a.downloads || 0));
     const grid = $("#grid");
-    if (!list.length) {
-      grid.className = "grid"; grid.innerHTML = showFeat ? "" : `<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div>${apps.length ? "ماكو نتائج، جرّب كلمة ثانية" : "قريباً… أول البرامج راح تنزل هنا"}</div>`;
+    // التصميم الكلاسيكي: البطاقة المميزة + أوضاع العرض
+    if (L === "classic") {
+      const feat = apps.find((a) => a.featured);
+      const showFeat = feat && !q && state.plat === "all" && state.cat === "all" && state.view !== "list";
+      $("#featBox").innerHTML = showFeat ? `
+        <div class="featured glass fade" data-slug="${esc(feat.slug)}">
+          <div class="media" style="background-image:url('${esc(feat.cover || feat.screenshots?.[0] || feat.icon || "")}')"></div>
+          <div class="info"><span class="chip gold" style="align-self:flex-start">${I.star} البرنامج المميز</span>
+            <div style="display:flex;gap:14px;align-items:center">${iconHTML(feat)}<h2>${esc(feat.name)}</h2></div>
+            <p class="sub">${esc(feat.tagline)}</p>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${platIcons(feat)}<span class="btn gold">${I.download} تحميل</span></div></div>
+        </div>` : "";
+      if (showFeat) list = list.filter((a) => a.id !== feat.id);
+      if (!list.length) { grid.className = "grid"; grid.innerHTML = showFeat ? "" : emptyMsg(apps.length); return; }
+      if (state.view === "list") { grid.className = "applist"; grid.innerHTML = list.map(rowList).join(""); }
+      else if (state.view === "cover") { grid.className = "grid cover-grid"; grid.innerHTML = list.map(cardCover).join(""); }
+      else if (state.view === "sections") {
+        grid.className = "sections"; const g = {};
+        for (const a of list) (g[a.category || "غير مصنّف"] = g[a.category || "غير مصنّف"] || []).push(a);
+        grid.innerHTML = Object.entries(g).map(([c, arr]) => `<div class="cat-sec"><h2 class="cat-h">${esc(c)} <span class="chip" style="font-size:.72rem">${arr.length}</span></h2><div class="grid">${arr.map(cardGrid).join("")}</div></div>`).join("");
+      } else { grid.className = "grid"; grid.innerHTML = list.map(cardGrid).join(""); }
       return;
     }
-    if (state.view === "list") { grid.className = "applist"; grid.innerHTML = list.map(rowList).join(""); }
-    else if (state.view === "cover") { grid.className = "grid cover-grid"; grid.innerHTML = list.map(cardCover).join(""); }
-    else if (state.view === "sections") {
-      grid.className = "sections";
-      const groups = {};
-      for (const a of list) (groups[a.category || "غير مصنّف"] = groups[a.category || "غير مصنّف"] || []).push(a);
-      grid.innerHTML = Object.entries(groups).map(([c, arr]) => `<div class="cat-sec"><h2 class="cat-h">${esc(c)} <span class="chip" style="font-size:.72rem">${arr.length}</span></h2><div class="grid">${arr.map(cardGrid).join("")}</div></div>`).join("");
-    } else { grid.className = "grid"; grid.innerHTML = list.map(cardGrid).join(""); }
+    // التصاميم الثلاثة: بطاقات المتجر
+    grid.className = L === "d3" ? "store-grid tight" : "store-grid";
+    grid.innerHTML = list.length ? list.map(cardStore).join("") : emptyMsg(apps.length);
   };
+  const emptyMsg = (n) => `<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div>${n ? "ماكو نتائج، جرّب كلمة ثانية" : "قريباً… أول البرامج راح تنزل هنا"}</div>`;
   draw();
-  $("#q").oninput = (e) => { state.q = e.target.value; draw(); };
-  $("#pf").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.plat = b.dataset.p; $("#pf .on")?.classList.remove("on"); b.classList.add("on"); draw(); };
-  $("#cf") && ($("#cf").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.cat = b.dataset.c; $("#cf .on")?.classList.remove("on"); b.classList.add("on"); draw(); });
-  $("#vb").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.view = b.dataset.view; try { localStorage.setItem("ib_view", state.view); } catch {} $("#vb .on")?.classList.remove("on"); b.classList.add("on"); draw(); };
-  view.onclick = (e) => { const c = e.target.closest("[data-slug]"); if (c) go("/app/" + encodeURIComponent(c.dataset.slug)); };
+
+  // ربط الأحداث
+  const setActive = (sel, el) => { view.querySelectorAll(sel).forEach((x) => x.classList.remove("on")); el && el.classList.add("on"); };
+  $("#q") && ($("#q").oninput = (e) => { state.q = e.target.value; draw(); });
+  view.querySelector("#pf") && (view.querySelector("#pf").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.plat = b.dataset.p; setActive("#pf button", b); draw(); });
+  view.querySelector("#cf") && (view.querySelector("#cf").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.cat = b.dataset.c; setActive("#cf button", b); draw(); });
+  $("#vb") && ($("#vb").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.view = b.dataset.view; try { localStorage.setItem("ib_view", state.view); } catch {} setActive("#vb button", b); draw(); });
+  view.querySelector(".laybar").onclick = (e) => { const b = e.target.closest("[data-layout]"); if (!b) return; state.layout = b.dataset.layout; try { localStorage.setItem("ib_layout", state.layout); } catch {} renderHome(); };
+  view.onclick = (e) => {
+    const sortB = e.target.closest("[data-sort]");
+    if (sortB) { state.sort = sortB.dataset.sort; setActive("[data-sort]", sortB); draw(); return; }
+    const catB = e.target.closest("[data-c]");
+    if (catB && !catB.closest("#cf")) { state.cat = catB.dataset.c; view.querySelectorAll("[data-c]").forEach((x) => x.classList.toggle("on", x.dataset.c === state.cat)); draw(); scrollToGrid(); return; }
+    const card = e.target.closest("[data-slug]");
+    if (card) go("/app/" + encodeURIComponent(card.dataset.slug));
+  };
+  function scrollToGrid() { const g = $("#grid"); if (g && (state.cat !== "all")) g.scrollIntoView({ behavior: "smooth", block: "start" }); }
 }
 
 /* ---------- صفحة التطبيق ---------- */
