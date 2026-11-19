@@ -37,6 +37,14 @@ body{display:block}
   .side button.tab{width:auto;white-space:nowrap}
 }
 
+.visitors{padding:18px 20px;margin-bottom:16px}
+.visitors .vh{display:flex;align-items:center;gap:8px;font-family:var(--head);font-size:1.05rem;margin-bottom:14px}
+.visitors .vh svg{width:20px;height:20px;color:var(--gold)}
+.visitors .vcells{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center}
+.visitors .vcells b{display:block;font-family:var(--head);font-size:1.9rem;line-height:1}
+.visitors .vcells span{color:var(--dim);font-size:.85rem}
+.visitors .vspark{display:flex;align-items:flex-end;gap:4px;height:46px;margin-top:16px;padding-top:12px;border-top:1px solid var(--line2)}
+.visitors .vspark i{flex:1;background:linear-gradient(var(--gold3),var(--gold2));border-radius:3px 3px 0 0;min-height:4px;opacity:.85}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
 .kpi{padding:18px}
 .kpi span{color:var(--dim);font-size:.85rem}
@@ -193,6 +201,7 @@ const main = $("#main");
 let APPS = [], REQS = [], REPORTS = [], SET = {}, TAB = "apps";
 const SUGGESTED_CATS = ["برامج الوسائط", "الإنترنت والتحميل", "الأمن والحماية", "أدوات النظام", "التصميم والجرافيك", "المكتب والإنتاجية", "الألعاب", "تطبيقات الأندرويد", "تطبيقات آيفون", "المتصفحات", "المحوّلات والأدوات", "تطبيقات التلفزيون"];
 const appCats = (a) => (a.categories && a.categories.length ? a.categories : (a.category ? [a.category] : []));
+let STATS = {};
 // اقتراح أقسام تلقائياً حسب الاسم والوصف
 function guessCats(a) {
   const t = [a.name, a.tagline, a.description, a.category, ...(a.keywords || [])].join(" ").toLowerCase();
@@ -235,7 +244,7 @@ async function start() {
   openTab("apps");
 }
 async function refresh() {
-  [APPS, REQS, REPORTS, SET] = await Promise.all([api("/admin/apps"), api("/admin/requests"), api("/admin/reports").catch(() => []), api("/settings")]);
+  [APPS, REQS, REPORTS, STATS, SET] = await Promise.all([api("/admin/apps"), api("/admin/requests"), api("/admin/reports").catch(() => []), api("/admin/stats").catch(() => ({})), api("/settings")]);
   const n = REQS.filter((r) => r.status === "new" && !r.hidden).length;
   const c = $("#newCount"); c.hidden = !n; c.textContent = n;
   const rn = REPORTS.length; const rc = $("#repCount"); rc.hidden = !rn; rc.textContent = rn;
@@ -254,6 +263,15 @@ function drawApps() {
   const dl = APPS.reduce((s, a) => s + (a.downloads || 0), 0), vw = APPS.reduce((s, a) => s + (a.views || 0), 0);
   main.innerHTML = `
   <div class="topbar"><h1>التطبيقات</h1><span class="sp"></span><button class="btn gold" id="newApp">${I.plus} تطبيق جديد</button></div>
+  <div class="visitors glass">
+    <div class="vh">${I.user} زوّار الموقع</div>
+    <div class="vcells">
+      <div><b class="gold-text">${fmtNum(STATS.today || 0)}</b><span>اليوم</span></div>
+      <div><b class="gold-text">${fmtNum(STATS.month || 0)}</b><span>هذا الشهر</span></div>
+      <div><b class="gold-text">${fmtNum(STATS.total || 0)}</b><span>الكلي</span></div>
+    </div>
+    ${STATS.chart ? `<div class="vspark">${(() => { const mx = Math.max(1, ...STATS.chart.map((x) => x.v)); return STATS.chart.map((x) => `<i style="height:${Math.max(6, Math.round(x.v / mx * 100))}%" title="${x.d}: ${x.v}"></i>`).join(""); })()}</div>` : ""}
+  </div>
   <div class="kpis">
     <div class="kpi glass"><span>التطبيقات</span><b class="gold-text">${APPS.length}</b></div>
     <div class="kpi glass"><span>التحميلات</span><b class="gold-text">${fmtNum(dl)}</b></div>

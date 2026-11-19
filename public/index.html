@@ -981,6 +981,7 @@ async function renderAbout() {
 /* ---------- البداية ---------- */
 (async () => {
   try { S = await api("/settings"); } catch { S = {}; }
+  try { if (!sessionStorage.getItem("ib_visited")) { sessionStorage.setItem("ib_visited", "1"); api("/visit", { method: "POST" }).catch(() => {}); } } catch {}
   S = { siteName: "IBRA STORE", siteSubtitle: "برامج وتطبيقات ابراهيم الخزرجي", heroTitle: "برامجي وتطبيقاتي بمكان واحد", heroText: "", developerName: "ابراهيم الخزرجي", developerBio: "", ...S };
   $("#siteName").textContent = S.siteName; $("#siteSub").textContent = S.siteSubtitle;
   if (S.telegram) $("#fTg").href = S.telegram;

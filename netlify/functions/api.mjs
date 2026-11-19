@@ -84,6 +84,9 @@ const loadReqs = () => getJSON("data", "requests", []);
 const saveReqs = (r) => setJSON("data", "requests", r);
 const loadReports = () => getJSON("data", "reports", []);
 const saveReports = (r) => setJSON("data", "reports", r);
+const loadStats = () => getJSON("data", "stats", { total: 0, days: {} });
+const saveStats = (s) => setJSON("data", "stats", s);
+const bagdadDay = () => new Date(Date.now() + 3 * 3600_000).toISOString().slice(0, 10); // تاريخ بغداد
 const loadSettings = async () => ({ ...DEFAULT_SETTINGS, ...(await getJSON("data", "settings", {})) });
 
 const slugify = (s) =>
@@ -188,6 +191,20 @@ export default async (req, context) => {
   try {
     /* ===== عام ===== */
     if (path === "/settings" && m === "GET") return json(await loadSettings());
+
+    // تسجيل زيارة (مرة لكل جلسة من المتصفح)
+    if (path === "/visit" && m === "POST") {
+      const st = await loadStats();
+      const d = bagdadDay();
+      st.total = (st.total || 0) + 1;
+      st.days = st.days || {};
+      st.days[d] = (st.days[d] || 0) + 1;
+      // تنظيف: نحتفظ بآخر ~400 يوم
+      const keys = Object.keys(st.days).sort();
+      if (keys.length > 400) for (const k of keys.slice(0, keys.length - 400)) delete st.days[k];
+      await saveStats(st);
+      return json({ ok: true });
+    }
 
     if (path === "/apps" && m === "GET") {
       const apps = (await loadApps()).filter((a) => a.published).map(publicApp);
@@ -504,6 +521,19 @@ export default async (req, context) => {
         }
       }
 
+      // عدّاد الزوار
+      if (path === "/admin/stats" && m === "GET") {
+        const st = await loadStats();
+        const today = bagdadDay();
+        const ym = today.slice(0, 7);
+        const days = st.days || {};
+        const month = Object.entries(days).reduce((s, [k, v]) => s + (k.startsWith(ym) ? v : 0), 0);
+        // آخر 14 يوم للرسم البياني الصغير
+        const chart = [];
+        for (let i = 13; i >= 0; i--) { const d = new Date(Date.now() + 3 * 3600_000 - i * 86400_000).toISOString().slice(0, 10); chart.push({ d, v: days[d] || 0 }); }
+        return json({ today: days[today] || 0, month, total: st.total || 0, chart });
+      }
+
       // بلاغات الروابط
       if (path === "/admin/reports" && m === "GET") return json(await loadReports());
       if (path === "/admin/reports/clear" && m === "POST") {
@@ -527,13 +557,14 @@ export default async (req, context) => {
       }
 
       if (path === "/admin/backup" && m === "GET") {
-        return json({ apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), settings: await loadSettings(), at: now() });
+        return json({ apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), settings: await loadSettings(), at: now() });
       }
       if (path === "/admin/restore" && m === "POST") {
         if (Array.isArray(body.apps)) await saveApps(body.apps);
         if (Array.isArray(body.requests)) await saveReqs(body.requests);
         if (Array.isArray(body.reports)) await saveReports(body.reports);
         if (body.raters && typeof body.raters === "object") await saveRaters(body.raters);
+        if (body.stats && typeof body.stats === "object") await saveStats(body.stats);
         if (body.settings) await setJSON("data", "settings", body.settings);
         return json({ ok: true });
       }
