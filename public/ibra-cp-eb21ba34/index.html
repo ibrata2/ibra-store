@@ -81,6 +81,10 @@ body{display:block}
 .tags span button svg{width:12px;height:12px}
 .tags input{flex:1;min-width:140px;background:none;border:0;outline:0;padding:4px}
 
+.dist-row{padding:16px 18px;margin-bottom:12px}
+.dist-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.dist-head .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dist-head .nm small{color:var(--gold3);font-size:.8rem}
 .cat-pick{display:flex;flex-wrap:wrap;gap:7px}
 .cat-pick .cp{padding:7px 13px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:600;font-size:.85rem;color:var(--muted);transition:.15s}
 .cat-pick .cp:hover{color:var(--text);border-color:var(--line)}
@@ -153,6 +157,7 @@ pre.post{white-space:pre-wrap;background:var(--sunken);border:1px solid var(--li
   <aside class="side">
     <div class="brand"><div class="logo"><span class="gold-text">IB</span></div><div><b class="gold-text">IBRA STORE</b><small>لوحة الإدارة</small></div></div>
     <button class="tab on" data-t="apps"></button>
+    <button class="tab" data-t="distribute"></button>
     <button class="tab" data-t="requests"></button>
     <button class="tab" data-t="reports"></button>
     <button class="tab" data-t="settings"></button>
@@ -186,8 +191,31 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const main = $("#main");
 let APPS = [], REQS = [], REPORTS = [], SET = {}, TAB = "apps";
+const SUGGESTED_CATS = ["برامج الوسائط", "الإنترنت والتحميل", "الأمن والحماية", "أدوات النظام", "التصميم والجرافيك", "المكتب والإنتاجية", "الألعاب", "تطبيقات الأندرويد", "تطبيقات آيفون", "المتصفحات", "المحوّلات والأدوات", "تطبيقات التلفزيون"];
+const appCats = (a) => (a.categories && a.categories.length ? a.categories : (a.category ? [a.category] : []));
+// اقتراح أقسام تلقائياً حسب الاسم والوصف
+function guessCats(a) {
+  const t = [a.name, a.tagline, a.description, a.category, ...(a.keywords || [])].join(" ").toLowerCase();
+  const out = new Set();
+  const add = (re, ...c) => { if (re.test(t)) c.forEach((x) => out.add(x)); };
+  add(/(مشغل|وسائط|ميديا|media|player|فيديو|صوت|موسيقى|اغاني|أغاني|audio|video)/, "برامج الوسائط");
+  add(/(تحميل|تنزيل|downloader|download|idm|حفظ|save|cobalt|yt-dlp|محمل)/, "الإنترنت والتحميل");
+  add(/(vpn|في بي ان|بروكسي|proxy|محجوب|فتح المواقع)/, "الإنترنت والتحميل", "الأمن والحماية");
+  add(/(متصفح|browser|كروم|chrome|crom)/, "المتصفحات", "الإنترنت والتحميل");
+  add(/(حماية|فايروس|فيروس|antivir|antivirus|أمان|امان|secur|protect)/, "الأمن والحماية");
+  add(/(صيانة|تنظيف|تحسين|نظام|system care|system|repair|cleaner|غلاس|glass)/, "أدوات النظام");
+  add(/(خط|خطوط|font|تصميم|design|جرافيك|graphic|صور|photo|وشم|tattoo|ink|شعار)/, "التصميم والجرافيك");
+  add(/(لعبة|العاب|ألعاب|game|زومبي|دبابة|tank|سيارات|مغامرة|بطاريق|penguin)/, "الألعاب");
+  add(/(محول|محوّل|convert|converter|تحويل)/, "المحوّلات والأدوات");
+  add(/(اندرويد|أندرويد|android|apk|هاتف|موبايل)/, "تطبيقات الأندرويد");
+  add(/(ايفون|آيفون|iphone|ios|ايباد|آيباد|ipad)/, "تطبيقات آيفون");
+  add(/(تلفزيون|تيفي|\btv\b|iptv|بث)/, "تطبيقات التلفزيون");
+  add(/(مكتب|office|محاسب|اكسل|excel|word|انتاج|إنتاج|product|فاتورة|حسابات)/, "المكتب والإنتاجية");
+  if (!out.size && a.category) out.add(a.category);
+  return [...out];
+}
 
-const TABS = { apps: [I.grid, "التطبيقات"], requests: [I.chat, "الطلبات"], reports: [I.warn, "بلاغات الروابط"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
+const TABS = { apps: [I.grid, "التطبيقات"], distribute: [I.folder, "توزيع الأقسام"], requests: [I.chat, "الطلبات"], reports: [I.warn, "بلاغات الروابط"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
 $$(".side .tab").forEach((b) => (b.innerHTML = `${TABS[b.dataset.t][0]}<span>${TABS[b.dataset.t][1]}</span>${b.dataset.t === "requests" ? '<span class="count" id="newCount" hidden></span>' : b.dataset.t === "reports" ? '<span class="count" id="repCount" hidden style="background:var(--bad);color:#fff"></span>' : ""}`));
 $$(".side .tab").forEach((b) => (b.onclick = () => openTab(b.dataset.t)));
 
@@ -215,7 +243,7 @@ async function refresh() {
 function openTab(t) {
   TAB = t;
   $$(".side .tab").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
-  ({ apps: drawApps, requests: drawRequests, reports: drawReports, settings: drawSettings, backup: drawBackup })[t]();
+  ({ apps: drawApps, distribute: drawDistribute, requests: drawRequests, reports: drawReports, settings: drawSettings, backup: drawBackup })[t]();
   scrollTo(0, 0);
 }
 
@@ -405,7 +433,6 @@ function editApp(app) {
   drawTags();
 
   /* الأقسام (متعددة) */
-  const SUGGESTED_CATS = ["برامج الوسائط", "الإنترنت والتحميل", "الأمن والحماية", "أدوات النظام", "التصميم والجرافيك", "المكتب والإنتاجية", "الألعاب", "تطبيقات الأندرويد", "تطبيقات آيفون", "المتصفحات", "المحوّلات والأدوات", "تطبيقات التلفزيون"];
   const allCats = [...new Set([...SUGGESTED_CATS, ...cats])];
   const drawCatTags = () => {
     $$("#catTags span").forEach((s) => s.remove());
@@ -698,6 +725,66 @@ function showPost(a) {
   $("#postClose").onclick = () => m.classList.remove("open");
   m.onclick = (e) => { if (e.target === m) m.classList.remove("open"); };
   draw(); m.classList.add("open");
+}
+
+/* ========== توزيع الأقسام ========== */
+function drawDistribute() {
+  const allCats = () => [...new Set([...SUGGESTED_CATS, ...APPS.flatMap((a) => appCats(a))])];
+  let q = "";
+  const saveTimers = {};
+  const saveApp = (a) => {
+    clearTimeout(saveTimers[a.id]);
+    saveTimers[a.id] = setTimeout(async () => {
+      try {
+        const saved = await api("/admin/apps/" + a.id, { method: "PUT", body: { ...a, categories: a.categories, category: a.categories[0] || "" } });
+        const i = APPS.findIndex((x) => x.id === a.id); if (i >= 0) APPS[i] = saved;
+        const row = main.querySelector(`[data-app="${a.id}"] .dsaved`); if (row) { row.textContent = "✓ محفوظ"; setTimeout(() => (row.textContent = ""), 1500); }
+      } catch (er) { toast(er.message, true); }
+    }, 500);
+  };
+  const render = () => {
+    const cats = allCats();
+    const list = APPS.filter((a) => !q || a.name.toLowerCase().includes(q.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name));
+    main.innerHTML = `
+    <div class="topbar"><h1>توزيع الأقسام</h1><span class="sp"></span>
+      <button class="btn gold" id="autoAll">${I.star} اقتراح تلقائي للكل</button></div>
+    <p class="sub" style="margin-bottom:14px">اضغط على القسم حتى تضيفه أو تشيله من البرنامج — كل برنامج يقبل أكثر من قسم. الحفظ تلقائي. زر «اقتراح» يوزّع الأقسام حسب اسم ووصف البرنامج.</p>
+    <div class="field" style="max-width:320px;margin-bottom:16px"><input class="input" id="dq" placeholder="🔎 ابحث عن برنامج" value="${esc(q)}"></div>
+    <div id="dlist">${list.length ? list.map((a) => `
+      <div class="dist-row glass" data-app="${a.id}">
+        <div class="dist-head">
+          <div class="app-icon" style="width:42px;height:42px;flex:none">${a.icon ? `<img src="${esc(a.icon)}" alt="">` : esc((a.name || "?")[0])}</div>
+          <div class="nm" style="flex:1;min-width:0"><b>${esc(a.name)}</b><small class="dcats">${appCats(a).length ? appCats(a).map(esc).join(" · ") : "بدون أقسام"}</small></div>
+          <span class="dsaved" style="color:var(--ok);font-size:.8rem"></span>
+          <button class="btn sm" data-auto="${a.id}">${I.star} اقتراح</button>
+        </div>
+        <div class="cat-pick" data-pick="${a.id}">${cats.map((c) => `<button type="button" class="cp ${appCats(a).includes(c) ? "on" : ""}" data-c="${esc(c)}">${appCats(a).includes(c) ? "✔ " : "+ "}${esc(c)}</button>`).join("")}</div>
+      </div>`).join("") : '<div class="empty glass"><div class="big">📦</div>ماكو برامج — ضيف برامج أول</div>'}</div>`;
+    $("#dq").oninput = (e) => { q = e.target.value; render(); $("#dq").focus(); };
+    $("#autoAll").onclick = () => {
+      if (!confirm("توزيع الأقسام المقترحة تلقائياً على كل البرامج؟ (يستبدل الأقسام الحالية بالمقترحة)")) return;
+      for (const a of APPS) { const g = guessCats(a); if (g.length) { a.categories = g; saveApp(a); } }
+      toast("جاري توزيع الأقسام…"); render();
+    };
+  };
+  render();
+  main.onclick = (e) => {
+    const auto = e.target.closest("[data-auto]");
+    if (auto) { const a = APPS.find((x) => x.id === auto.dataset.auto); const g = guessCats(a); a.categories = g.length ? g : appCats(a); updateRow(a); saveApp(a); return; }
+    const chip = e.target.closest("[data-pick] [data-c]");
+    if (chip) {
+      const a = APPS.find((x) => x.id === chip.closest("[data-pick]").dataset.pick);
+      a.categories = appCats(a).slice();
+      const c = chip.dataset.c, i = a.categories.indexOf(c);
+      if (i >= 0) a.categories.splice(i, 1); else a.categories.push(c);
+      updateRow(a); saveApp(a);
+    }
+  };
+  function updateRow(a) {
+    const row = main.querySelector(`[data-app="${a.id}"]`); if (!row) return;
+    row.querySelector(".dcats").textContent = a.categories.length ? a.categories.join(" · ") : "بدون أقسام";
+    row.querySelectorAll("[data-pick] .cp").forEach((b) => { const on = a.categories.includes(b.dataset.c); b.classList.toggle("on", on); b.textContent = (on ? "✔ " : "+ ") + b.dataset.c; });
+  }
 }
 
 /* ========== الطلبات ========== */
