@@ -160,6 +160,7 @@ function normalizeNA(input, old = {}) {
     perFeed: num(input.perFeed, old.perFeed ?? 3, 1, 10),
     feeds: feeds.length ? feeds : DEFAULT_FEEDS,
     lastRunAt: old.lastRunAt ?? null,
+    force: old.force ?? null, // طلب جلب فوري (count) — يُضبط من run-now فقط
   };
 }
 
@@ -539,9 +540,34 @@ export default async (req, context) => {
         await saveNA(next);
         return json(next);
       }
+      // تشغيل فوري: جلب عدد مختار من الأخبار الآن (يعوّض أخبار الصبح/الأيام الفايتة)
+      if (path === "/admin/news/run-now" && m === "POST") {
+        const count = Math.min(30, Math.max(1, Math.round(+body.count || 5)));
+        const na = await loadNA();
+        na.force = { count };
+        await saveNA(na);
+        const token = process.env.GITHUB_TOKEN, repo = process.env.GITHUB_REPO;
+        if (!token || !repo)
+          return json({ ok: true, dispatched: false, count, note: "تم ضبط الطلب. راح يُنفّذ بأقرب تشغيل تلقائي (كل ساعة)، أو شغّل workflow «news» يدوياً من GitHub الآن." });
+        const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/news.yml/dispatches`, {
+          method: "POST",
+          headers: { authorization: "Bearer " + token, accept: "application/vnd.github+json", "user-agent": "ibra-store", "content-type": "application/json" },
+          body: JSON.stringify({ ref: process.env.GITHUB_BRANCH || "main" }),
+        });
+        if (r.status !== 204) return err("GitHub رفض الطلب: " + r.status + " " + (await r.text()).slice(0, 200), 502);
+        return json({ ok: true, dispatched: true, count, actions: `https://github.com/${repo}/actions/workflows/news.yml` });
+      }
+
       // خطة التشغيل: يسألها الـ workflow كل ساعة ليقرر هل ينشر الآن وكم
       if (path === "/admin/news/plan" && m === "GET") {
         const na = await loadNA();
+        // طلب فوري له الأولوية: يتجاوز الفاصل والنافذة والإيقاف
+        if (na.force && na.force.count > 0) {
+          const count = Math.min(30, na.force.count);
+          na.force = null; na.lastRunAt = now();
+          await saveNA(na);
+          return json({ run: true, count, perFeed: Math.min(20, Math.max(na.perFeed, count)), autoPublish: na.autoPublish, feeds: na.feeds.filter((f) => f.enabled), forced: true });
+        }
         if (!na.enabled) return json({ run: false, reason: "النشر التلقائي موقوف" });
         const h = bagdadHour();
         const inWindow = na.startHour <= na.endHour
