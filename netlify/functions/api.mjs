@@ -18,10 +18,15 @@ const getJSON = async (s, key, def) => {
 const setJSON = (s, key, val) => store(s).setJSON(key, val);
 
 /* ---------- أدوات ---------- */
+const CORS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS",
+  "access-control-allow-headers": "content-type,x-admin-key,x-user-token",
+};
 const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...extra },
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...CORS, ...extra },
   });
 const err = (msg, status = 400) => json({ error: msg }, status);
 const uid = (n = 10) => crypto.randomBytes(n).toString("base64url").slice(0, n);
@@ -257,6 +262,7 @@ export default async (req, context) => {
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api/, "").replace(/\/+$/, "") || "/";
   const m = req.method;
+  if (m === "OPTIONS") return new Response(null, { status: 204, headers: CORS }); // preflight للتضمين الخارجي
   let body = {};
   if (m === "POST" || m === "PUT" || m === "PATCH") {
     try { body = await req.json(); } catch { body = {}; }
