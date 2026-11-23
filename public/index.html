@@ -164,9 +164,11 @@ body.is-home #layWrap{display:block}
 .tk-track{display:flex;align-items:center;gap:14px;white-space:nowrap;overflow:hidden;flex:1;padding:10px 14px;mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
 .tk-track{animation:tkscroll 40s linear infinite}
 .ticker:hover .tk-track{animation-play-state:paused}
-@keyframes tkscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes tkscroll{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 .tk-item{color:var(--text);font-weight:600;font-size:.9rem;cursor:pointer}
 .tk-item:hover{color:var(--gold3)}
+.tk-item .tk-name{font-weight:800}
+.tk-item .tk-sub{color:var(--muted);font-weight:600}
 .tk-dot{color:var(--gold);opacity:.6}
 @media(max-width:600px){.tk-track{animation-duration:26s}}
 
@@ -1018,7 +1020,7 @@ async function renderNews() {
       <div class="tk-track">${news.length ? [0, 1].map(() => news.slice(0, 15).map((n) => `<a class="tk-item" data-news="${esc(n.slug)}">${esc(n.title)}</a>`).join("<span class='tk-dot'>•</span>")).join("<span class='tk-dot'>•</span>") : "<span class='tk-item'>قريباً…</span>"}</div>
     </div>
     <div class="ticker"><span class="tk-lbl tk-apps">${I.download} برامج جديدة</span>
-      <div class="tk-track">${recentApps.length ? [0, 1].map(() => recentApps.map((a) => `<a class="tk-item" data-app="${esc(a.slug)}">${esc(a.name)}</a>`).join("<span class='tk-dot'>•</span>")).join("<span class='tk-dot'>•</span>") : "<span class='tk-item'>قريباً…</span>"}</div>
+      <div class="tk-track">${recentApps.length ? [0, 1].map(() => recentApps.map((a) => { const d = (a.tagline || a.description || "").replace(/\s+/g, " ").trim().slice(0, 70); return `<a class="tk-item" data-app="${esc(a.slug)}"><bdi class="tk-name">${esc(a.name)}</bdi>${d ? ` — <span class="tk-sub">${esc(d)}</span>` : ""}</a>`; }).join("<span class='tk-dot'>•</span>")).join("<span class='tk-dot'>•</span>") : "<span class='tk-item'>قريباً…</span>"}</div>
     </div>
   </div>
   <section class="section" style="padding-top:18px">
