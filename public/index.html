@@ -388,6 +388,8 @@ body.is-home #layWrap{display:block}
   </div>
 </header>
 
+<div id="tickerHost"></div>
+
 <main id="view" class="wrap"><div class="spinner"></div></main>
 
 <footer class="footer">
@@ -1015,14 +1017,6 @@ async function renderNews() {
   const recentApps = [...apps].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 12);
 
   view.innerHTML = `
-  <div class="ticker-wrap">
-    <div class="ticker"><span class="tk-lbl tk-news">${I.fire} أخبار</span>
-      <div class="tk-track">${news.length ? [0, 1].map(() => news.slice(0, 15).map((n) => `<a class="tk-item" data-news="${esc(n.slug)}">${esc(n.title)}</a>`).join("<span class='tk-dot'>•</span>")).join("<span class='tk-dot'>•</span>") : "<span class='tk-item'>قريباً…</span>"}</div>
-    </div>
-    <div class="ticker"><span class="tk-lbl tk-apps">${I.download} برامج جديدة</span>
-      <div class="tk-track">${recentApps.length ? [0, 1].map(() => recentApps.map((a) => { const d = (a.tagline || a.description || "").replace(/\s+/g, " ").trim().slice(0, 70); return `<a class="tk-item" data-app="${esc(a.slug)}"><bdi class="tk-name">${esc(a.name)}</bdi>${d ? ` — <span class="tk-sub">${esc(d)}</span>` : ""}</a>`; }).join("<span class='tk-dot'>•</span>")).join("<span class='tk-dot'>•</span>") : "<span class='tk-item'>قريباً…</span>"}</div>
-    </div>
-  </div>
   <section class="section" style="padding-top:18px">
     <div class="sec-head"><h2>${I.fire} الأخبار التقنية</h2></div>
     <div class="filters" id="nf">
@@ -1110,6 +1104,25 @@ async function renderAbout() {
   </section>`;
 }
 
+/* ---------- شريط الأخبار العام (يظهر بكل الصفحات) ---------- */
+async function mountTickers() {
+  const host = $("#tickerHost"); if (!host) return;
+  const [news, apps] = await Promise.all([api("/news").catch(() => []), loadApps().catch(() => [])]);
+  const recent = [...apps].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 12);
+  if (!news.length && !recent.length) { host.innerHTML = ""; return; }
+  const dot = "<span class='tk-dot'>•</span>";
+  const newsRow = news.length ? [0, 1].map(() => news.slice(0, 15).map((n) => `<a class="tk-item" data-news="${esc(n.slug)}">${esc(n.title)}</a>`).join(dot)).join(dot) : "<span class='tk-item'>قريباً…</span>";
+  const appsRow = recent.length ? [0, 1].map(() => recent.map((a) => { const d = (a.tagline || a.description || "").replace(/\s+/g, " ").trim().slice(0, 70); return `<a class="tk-item" data-app="${esc(a.slug)}"><bdi class="tk-name">${esc(a.name)}</bdi>${d ? ` — <span class="tk-sub">${esc(d)}</span>` : ""}</a>`; }).join(dot)).join(dot) : "<span class='tk-item'>قريباً…</span>";
+  host.innerHTML = `<div class="wrap"><div class="ticker-wrap">
+    <div class="ticker"><span class="tk-lbl tk-news">${I.fire} أخبار</span><div class="tk-track">${newsRow}</div></div>
+    <div class="ticker"><span class="tk-lbl tk-apps">${I.download} برامج جديدة</span><div class="tk-track">${appsRow}</div></div>
+  </div></div>`;
+  host.onclick = (e) => {
+    const n = e.target.closest("[data-news]"); if (n) return go("/news/" + encodeURIComponent(n.dataset.news));
+    const a = e.target.closest("[data-app]"); if (a) return go("/app/" + encodeURIComponent(a.dataset.app));
+  };
+}
+
 /* ---------- البداية ---------- */
 (async () => {
   try { S = await api("/settings"); } catch { S = {}; }
@@ -1122,6 +1135,7 @@ async function renderAbout() {
   IB.mountThemePicker($("#themeBtn"), $("#themeMenu"), { current: IB.savedTheme() || S.theme || "gold" });
   try { if (localStorage.getItem("ib_token")) USER = (await api("/me")).user; } catch { try { localStorage.removeItem("ib_token"); } catch {} }
   route();
+  mountTickers();
 })();
 </script>
 </body>
