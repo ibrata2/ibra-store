@@ -1,10 +1,11 @@
-# IBRA STORE — جلب الأخبار التقنية يومياً وترجمتها للعربية ونشرها
+# IBRA STORE — يسأل الموقع كل ساعة: هل أنشر أخبار الآن؟
+# كل الإعدادات (المصادر/العدد/الفاصل/أوقات النشر) تُدار من لوحة الإدارة.
 name: news
 
 on:
   schedule:
-    - cron: "0 6 * * *"    # كل يوم 6 صباحاً UTC = 9 صباحاً بغداد
-  workflow_dispatch:         # تشغيل يدوي
+    - cron: "0 * * * *"     # كل ساعة — الموقع هو من يقرر هل ينشر فعلاً
+  workflow_dispatch:          # تشغيل يدوي فوري
 
 jobs:
   news:
@@ -13,8 +14,6 @@ jobs:
     env:
       SITE: ${{ vars.SITE_URL || 'https://ibraprogram.netlify.app' }}
       ADMIN_KEY: ${{ secrets.ADMIN_PASSWORD }}
-      NEWS_PER_DAY: ${{ vars.NEWS_PER_DAY || '6' }}      # عدد المنشورات باليوم (غيّره من Variables)
-      NEWS_PER_FEED: ${{ vars.NEWS_PER_FEED || '3' }}    # أقصى عدد من كل مصدر
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

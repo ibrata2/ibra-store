@@ -108,7 +108,60 @@ function normalizeNews(input, old = {}) {
 }
 const publicNews = (n) => { const { ...r } = n; return r; };
 const bagdadDay = () => new Date(Date.now() + 3 * 3600_000).toISOString().slice(0, 10); // تاريخ بغداد
+const bagdadHour = () => new Date(Date.now() + 3 * 3600_000).getUTCHours(); // ساعة بغداد 0-23
 const loadSettings = async () => ({ ...DEFAULT_SETTINGS, ...(await getJSON("data", "settings", {})) });
+
+/* ---------- إعدادات الأخبار التلقائية (يتحكم بيها المستخدم من اللوحة) ---------- */
+const DEFAULT_FEEDS = [
+  { url: "https://www.theverge.com/rss/index.xml", lang: "en", source: "The Verge", category: "عام تقني", enabled: true },
+  { url: "https://techcrunch.com/feed/", lang: "en", source: "TechCrunch", category: "عام تقني", enabled: true },
+  { url: "https://www.engadget.com/rss.xml", lang: "en", source: "Engadget", category: "الحواسيب والأجهزة", enabled: true },
+  { url: "https://feeds.arstechnica.com/arstechnica/technology-lab", lang: "en", source: "Ars Technica", category: "عام تقني", enabled: true },
+  { url: "https://aitnews.com/feed/", lang: "ar", source: "البوابة العربية للأخبار التقنية", category: "عام تقني", enabled: true },
+  { url: "https://www.tech-wd.com/wd/feed/", lang: "ar", source: "عالم التقنية", category: "عام تقني", enabled: true },
+];
+const DEFAULT_NA = {
+  enabled: true,        // تشغيل النشر التلقائي
+  perRun: 2,            // كم خبر بكل دفعة
+  intervalHours: 6,     // الفاصل بالساعات بين دفعة ودفعة
+  autoPublish: true,    // true=ينشر فوراً | false=يخزن كمسودة مخفية للمراجعة
+  startHour: 8,         // بداية نافذة النشر (ساعة بغداد)
+  endHour: 23,          // نهاية نافذة النشر (ساعة بغداد)
+  perFeed: 3,           // أقصى عدد يُسحب من كل مصدر
+  feeds: DEFAULT_FEEDS,
+  lastRunAt: null,
+};
+const loadNA = async () => {
+  const saved = await getJSON("data", "newsAuto", null);
+  const na = { ...DEFAULT_NA, ...(saved || {}) };
+  if (!Array.isArray(na.feeds) || !na.feeds.length) na.feeds = DEFAULT_FEEDS;
+  return na;
+};
+const saveNA = (na) => setJSON("data", "newsAuto", na);
+function normalizeNA(input, old = {}) {
+  const num = (v, d, lo, hi) => { const n = Math.round(+v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
+  const feeds = (Array.isArray(input.feeds) ? input.feeds : old.feeds || DEFAULT_FEEDS)
+    .map((f) => ({
+      url: clean(f.url, 400),
+      lang: f.lang === "en" ? "en" : "ar",
+      source: clean(f.source, 80) || "مصدر",
+      category: clean(f.category, 60) || "عام تقني",
+      enabled: f.enabled !== false,
+    }))
+    .filter((f) => /^https?:\/\//.test(f.url))
+    .slice(0, 30);
+  return {
+    enabled: input.enabled !== false,
+    perRun: num(input.perRun, old.perRun ?? 2, 1, 20),
+    intervalHours: num(input.intervalHours, old.intervalHours ?? 6, 1, 168),
+    autoPublish: input.autoPublish !== false,
+    startHour: num(input.startHour, old.startHour ?? 8, 0, 23),
+    endHour: num(input.endHour, old.endHour ?? 23, 0, 23),
+    perFeed: num(input.perFeed, old.perFeed ?? 3, 1, 10),
+    feeds: feeds.length ? feeds : DEFAULT_FEEDS,
+    lastRunAt: old.lastRunAt ?? null,
+  };
+}
 
 const slugify = (s) =>
   clean(s, 80).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || uid(6);
@@ -477,6 +530,36 @@ export default async (req, context) => {
         await saveNews(news.slice(0, 400));
         return json({ ok: true, added });
       }
+
+      /* ===== إعدادات الأخبار التلقائية (تحكم كامل من اللوحة) ===== */
+      if (path === "/admin/news/auto" && m === "GET") return json(await loadNA());
+      if (path === "/admin/news/auto" && m === "PUT") {
+        const cur = await loadNA();
+        const next = normalizeNA(body, cur);
+        await saveNA(next);
+        return json(next);
+      }
+      // خطة التشغيل: يسألها الـ workflow كل ساعة ليقرر هل ينشر الآن وكم
+      if (path === "/admin/news/plan" && m === "GET") {
+        const na = await loadNA();
+        if (!na.enabled) return json({ run: false, reason: "النشر التلقائي موقوف" });
+        const h = bagdadHour();
+        const inWindow = na.startHour <= na.endHour
+          ? (h >= na.startHour && h < na.endHour)
+          : (h >= na.startHour || h < na.endHour);
+        if (!inWindow) return json({ run: false, reason: "خارج نافذة النشر" });
+        const elapsed = na.lastRunAt ? Date.now() - new Date(na.lastRunAt).getTime() : Infinity;
+        if (elapsed < na.intervalHours * 3600_000 - 300_000) return json({ run: false, reason: "لم يحن موعد الدفعة التالية" });
+        na.lastRunAt = now(); // نحجز الموعد حتى لا تتكرر الدفعة
+        await saveNA(na);
+        return json({
+          run: true,
+          count: na.perRun,
+          perFeed: na.perFeed,
+          autoPublish: na.autoPublish,
+          feeds: na.feeds.filter((f) => f.enabled),
+        });
+      }
       // تعديل/حذف خبر — بعد ingest حتى لا تبتلع "ingest"
       if ((mm = path.match(/^\/admin\/news\/([^/]+)$/))) {
         const news = await loadNews();
@@ -644,7 +727,7 @@ export default async (req, context) => {
       }
 
       if (path === "/admin/backup" && m === "GET") {
-        const data = { apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), news: await loadNews(), settings: await loadSettings(), at: now() };
+        const data = { apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), news: await loadNews(), newsAuto: await loadNA(), settings: await loadSettings(), at: now() };
         // ?save=1 يحفظ نسخة داخل الموقع (آخر 10 نسخ)
         if (url.searchParams.get("save") === "1") {
           const id = bagdadDay() + "-" + uid(4);
@@ -672,6 +755,7 @@ export default async (req, context) => {
         if (body.raters && typeof body.raters === "object") await saveRaters(body.raters);
         if (body.stats && typeof body.stats === "object") await saveStats(body.stats);
         if (Array.isArray(body.news)) await saveNews(body.news);
+        if (body.newsAuto && typeof body.newsAuto === "object") await saveNA(normalizeNA(body.newsAuto, {}));
         if (body.settings) await setJSON("data", "settings", body.settings);
         return json({ ok: true });
       }

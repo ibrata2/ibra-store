@@ -132,6 +132,9 @@ body{display:block}
 .switch i::after{content:"";position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#888;transition:.2s}
 .switch input:checked+i{background:var(--gold-dim);box-shadow:inset 0 0 0 1px var(--gold)}
 .switch input:checked+i::after{right:23px;background:var(--gold)}
+.switch.sm i{width:40px;height:22px}.switch.sm i::after{width:16px;height:16px}.switch.sm input:checked+i::after{right:21px}
+.feed-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card2,rgba(255,255,255,.02))}
+.feed-row .f_url{flex:1;min-width:180px}
 
 .savebar{position:sticky;bottom:14px;z-index:30;display:flex;gap:10px;align-items:center;padding:12px 16px;margin-top:10px}
 .savebar .sp{flex:1}
@@ -748,16 +751,22 @@ function showPost(a) {
 }
 
 /* ========== إدارة الأخبار ========== */
-let NEWS = [];
+let NEWS = [], NA = null;
 async function drawNews() {
   main.innerHTML = '<div class="topbar"><h1>الأخبار التقنية</h1></div><div class="spinner"></div>';
-  try { NEWS = await api("/admin/news"); } catch (er) { main.innerHTML = `<div class="empty glass">${esc(er.message)}</div>`; return; }
+  try { [NEWS, NA] = await Promise.all([api("/admin/news"), api("/admin/news/auto")]); } catch (er) { main.innerHTML = `<div class="empty glass">${esc(er.message)}</div>`; return; }
   listNews();
+}
+function naSummary() {
+  if (!NA) return "";
+  if (!NA.enabled) return "⏸ النشر التلقائي موقوف";
+  const nf = NA.feeds.filter((f) => f.enabled).length;
+  return `▶ تلقائي: ${NA.perRun} خبر كل ${NA.intervalHours} ساعة · بين ${NA.startHour}:00 و ${NA.endHour}:00 · ${nf} مصدر · ${NA.autoPublish ? "نشر فوري" : "مسودة للمراجعة"}`;
 }
 function listNews() {
   main.innerHTML = `
-    <div class="topbar"><h1>الأخبار التقنية</h1><span class="sp"></span><button class="btn gold" id="newNews">${I.plus} خبر جديد</button></div>
-    <p class="sub" style="margin-bottom:14px">الأخبار تُجلب تلقائياً كل يوم وتُترجم للعربية، وتكدر تضيف/تعدّل يدوياً. ${NEWS.length} خبر.</p>
+    <div class="topbar"><h1>الأخبار التقنية</h1><span class="sp"></span><button class="btn" id="autoBtn">${I.clock || I.settings} النشر التلقائي</button><button class="btn gold" id="newNews">${I.plus} خبر جديد</button></div>
+    <p class="sub" style="margin-bottom:14px">${esc(naSummary())} — وتكدر تضيف/تعدّل يدوياً. ${NEWS.length} خبر.</p>
     <div id="nlist">${NEWS.length ? [...NEWS].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((n) => `
       <div class="row-app glass" data-id="${n.id}">
         <div class="app-icon" style="width:56px;height:44px;border-radius:10px;${n.image ? `background:url('${esc(n.image)}') center/cover` : ""}">${n.image ? "" : I.fire}</div>
@@ -770,6 +779,7 @@ function listNews() {
         </div>
       </div>`).join("") : '<div class="empty glass"><div class="big">📰</div>ماكو أخبار بعد — اضغط «خبر جديد» أو انتظر الجلب التلقائي</div>'}</div>`;
   $("#newNews").onclick = () => editNews(null);
+  $("#autoBtn").onclick = () => editAuto();
   $("#nlist").onclick = async (e) => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.edit) editNews(NEWS.find((n) => n.id === b.dataset.edit));
@@ -807,6 +817,59 @@ function editNews(news) {
     if (!body.title) return toast("اكتب عنوان الخبر", true);
     $("#nSave").disabled = true;
     try { const saved = await api(isNew ? "/admin/news" : "/admin/news/" + n.id, { method: isNew ? "POST" : "PUT", body }); const i = NEWS.findIndex((x) => x.id === saved.id); if (i >= 0) NEWS[i] = saved; else NEWS.unshift(saved); toast("انحفظ ✔"); listNews(); } catch (er) { toast(er.message, true); $("#nSave").disabled = false; }
+  };
+}
+
+/* ========== إعدادات النشر التلقائي ========== */
+function editAuto() {
+  const a = JSON.parse(JSON.stringify(NA || {}));
+  const hourOpts = (sel) => Array.from({ length: 24 }, (_, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${i}:00</option>`).join("");
+  const feedRow = (f, i) => `
+    <div class="feed-row" data-i="${i}">
+      <label class="switch sm"><input type="checkbox" class="f_en" ${f.enabled !== false ? "checked" : ""}><i></i></label>
+      <input class="input f_src" placeholder="اسم المصدر" value="${esc(f.source || "")}" style="max-width:150px">
+      <input class="input f_url" dir="ltr" placeholder="https://…/feed" value="${esc(f.url || "")}">
+      <select class="input f_lang" style="max-width:120px"><option value="ar" ${f.lang !== "en" ? "selected" : ""}>عربي</option><option value="en" ${f.lang === "en" ? "selected" : ""}>إنكليزي↦يُترجم</option></select>
+      <input class="input f_cat" placeholder="القسم" value="${esc(f.category || "عام تقني")}" list="ncats" style="max-width:150px">
+      <button class="btn sm danger f_rm" title="حذف المصدر">${I.trash}</button>
+    </div>`;
+  main.innerHTML = `
+    <div class="topbar"><button class="btn sm ghost" id="back">→ رجوع</button><h1>إعدادات النشر التلقائي</h1></div>
+    <div class="sec glass"><div class="ed-grid">
+      <div class="full"><label class="switch"><input type="checkbox" id="a_enabled" ${a.enabled !== false ? "checked" : ""}><i></i>تشغيل النشر التلقائي</label></div>
+      <div class="field"><label>عدد الأخبار بكل دفعة</label><input class="input" type="number" min="1" max="20" id="a_perRun" value="${a.perRun ?? 2}"></div>
+      <div class="field"><label>الفاصل بين الدفعات (ساعات)</label><input class="input" type="number" min="1" max="168" id="a_interval" value="${a.intervalHours ?? 6}"></div>
+      <div class="field"><label>يبدأ النشر الساعة</label><select class="input" id="a_start">${hourOpts(a.startHour ?? 8)}</select></div>
+      <div class="field"><label>يتوقف النشر الساعة</label><select class="input" id="a_end">${hourOpts(a.endHour ?? 23)}</select></div>
+      <div class="field"><label>أقصى عدد من كل مصدر</label><input class="input" type="number" min="1" max="10" id="a_perFeed" value="${a.perFeed ?? 3}"></div>
+      <div class="full"><label class="switch"><input type="checkbox" id="a_autopub" ${a.autoPublish !== false ? "checked" : ""}><i></i>نشر فوري (إذا أطفيته: يُخزن كمسودة مخفية للمراجعة قبل النشر)</label></div>
+    </div></div>
+    <div class="sec glass">
+      <div class="topbar" style="margin:0 0 10px"><h2 style="margin:0">المصادر</h2><span class="sp"></span><button class="btn sm" id="addFeed">${I.plus} مصدر</button></div>
+      <p class="sub">فعّل/عطّل أي مصدر، أو ضيف مصدر RSS جديد (رابط الـ feed). الإنكليزي يُترجم تلقائياً للعربي.</p>
+      <datalist id="ncats">${NEWS_CATS.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>
+      <div id="feeds">${(a.feeds || []).map(feedRow).join("")}</div>
+    </div>
+    <div class="savebar glass"><button class="btn gold" id="aSave">${I.check} حفظ الإعدادات</button></div>`;
+  $("#back").onclick = () => listNews();
+  $("#addFeed").onclick = () => { $("#feeds").insertAdjacentHTML("beforeend", feedRow({ enabled: true, lang: "en", category: "عام تقني" }, Date.now())); };
+  $("#feeds").onclick = (e) => { const b = e.target.closest(".f_rm"); if (b) b.closest(".feed-row").remove(); };
+  $("#aSave").onclick = async () => {
+    const feeds = [...document.querySelectorAll(".feed-row")].map((r) => ({
+      enabled: r.querySelector(".f_en").checked,
+      source: r.querySelector(".f_src").value.trim(),
+      url: r.querySelector(".f_url").value.trim(),
+      lang: r.querySelector(".f_lang").value,
+      category: r.querySelector(".f_cat").value.trim() || "عام تقني",
+    })).filter((f) => f.url);
+    const body = {
+      enabled: $("#a_enabled").checked,
+      perRun: +$("#a_perRun").value, intervalHours: +$("#a_interval").value,
+      startHour: +$("#a_start").value, endHour: +$("#a_end").value, perFeed: +$("#a_perFeed").value,
+      autoPublish: $("#a_autopub").checked, feeds,
+    };
+    $("#aSave").disabled = true;
+    try { NA = await api("/admin/news/auto", { method: "PUT", body }); toast("انحفظ ✔"); listNews(); } catch (er) { toast(er.message, true); $("#aSave").disabled = false; }
   };
 }
 

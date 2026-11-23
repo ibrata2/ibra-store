@@ -1,23 +1,28 @@
-// IBRA STORE — جلب أخبار تقنية يومياً وترجمتها للعربية ونشرها
+// IBRA STORE — جلب أخبار تقنية وترجمتها للعربية ونشرها
+// كل الإعدادات (المصادر/العدد/الفاصل/النافذة) تُدار من لوحة الإدارة.
+// هذا السكربت يسأل الموقع "هل أنشر الآن وكم؟" وينفّذ فقط.
 // يشتغل من GitHub Actions. يحتاج: SITE, ADMIN_KEY
 import Parser from "rss-parser";
 
 const SITE = process.env.SITE || "https://ibraprogram.netlify.app";
 const KEY = process.env.ADMIN_KEY;
 if (!KEY) { console.error("ADMIN_KEY مفقود"); process.exit(1); }
+const H = { "content-type": "application/json", "x-admin-key": KEY };
 
-// المصادر: ar=عربي (بدون ترجمة) | en=إنكليزي (يترجم)
-const FEEDS = [
-  { url: "https://www.theverge.com/rss/index.xml", lang: "en", source: "The Verge", cat: "عام تقني" },
-  { url: "https://techcrunch.com/feed/", lang: "en", source: "TechCrunch", cat: "عام تقني" },
-  { url: "https://www.engadget.com/rss.xml", lang: "en", source: "Engadget", cat: "الحواسيب والأجهزة" },
-  { url: "https://feeds.arstechnica.com/arstechnica/technology-lab", lang: "en", source: "Ars Technica", cat: "عام تقني" },
-  { url: "https://aitnews.com/feed/", lang: "ar", source: "البوابة العربية للأخبار التقنية", cat: "عام تقني" },
-  { url: "https://www.tech-wd.com/wd/feed/", lang: "ar", source: "عالم التقنية", cat: "عام تقني" },
-];
-// عدد المنشورات: يُضبط من متغيّرات GitHub (Variables) بدون تعديل الكود
-const PER_FEED = Math.max(1, +(process.env.NEWS_PER_FEED || 3)); // أحدث كم خبر من كل مصدر
-const PER_DAY  = Math.max(1, +(process.env.NEWS_PER_DAY  || 6)); // إجمالي المنشورات باليوم
+// 0) نسأل الموقع عن خطة النشر (يقررها المستخدم من اللوحة)
+let plan;
+try {
+  const r = await fetch(`${SITE}/api/admin/news/plan`, { headers: H });
+  plan = await r.json();
+} catch (e) { console.error("تعذّر الوصول للموقع:", e.message); process.exit(1); }
+
+if (!plan || !plan.run) { console.log("لا نشر الآن:", plan?.reason || "—"); process.exit(0); }
+
+const FEEDS = Array.isArray(plan.feeds) ? plan.feeds : [];
+const PER_FEED = Math.max(1, +plan.perFeed || 3);
+const PER_DAY = Math.max(1, +plan.count || 2);
+const AUTO_PUBLISH = plan.autoPublish !== false;
+if (!FEEDS.length) { console.log("ماكو مصادر مفعّلة باللوحة"); process.exit(0); }
 
 const parser = new Parser({ timeout: 20000, headers: { "User-Agent": "Mozilla/5.0 IBRA-STORE-bot" } });
 const strip = (s) => String(s || "").replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
@@ -60,16 +65,16 @@ for (const f of FEEDS) {
   } catch (e) { console.log(`✘ ${f.source}: ${e.message}`); perFeed.push([]); }
 }
 
-// 2) نوزّعهم بالتناوب بين المصادر (مزيج عادل) ثم نقص على العدد المطلوب لليوم
+// 2) نوزّعهم بالتناوب بين المصادر (مزيج عادل) ثم نقص على العدد المطلوب
 const mixed = [];
 for (let i = 0; mixed.length < PER_DAY; i++) {
   let any = false;
   for (const arr of perFeed) { if (arr[i]) { mixed.push(arr[i]); any = true; if (mixed.length >= PER_DAY) break; } }
   if (!any) break;
 }
-console.log(`➜ المطلوب نشره اليوم: ${mixed.length} خبر (الحد: ${PER_DAY})`);
+console.log(`➜ المطلوب نشره: ${mixed.length} خبر`);
 
-// 3) نترجم المختارين فقط (توفير للوقت والطلبات)
+// 3) نترجم المختارين فقط
 const items = [];
 for (const c of mixed) {
   const en = c.f.lang === "en";
@@ -79,14 +84,13 @@ for (const c of mixed) {
   items.push({
     title, excerpt, body: bodyTxt || excerpt,
     image: c.image, source: c.f.source, sourceUrl: c.sourceUrl,
-    category: guessCat(c.rawTitle, c.f.cat),
+    category: guessCat(c.rawTitle, c.f.category || "عام تقني"),
   });
 }
 
 if (!items.length) { console.log("ماكو أخبار"); process.exit(0); }
 const res = await fetch(`${SITE}/api/admin/news/ingest`, {
-  method: "POST",
-  headers: { "content-type": "application/json", "x-admin-key": KEY },
-  body: JSON.stringify({ items, autoPublish: true }),
+  method: "POST", headers: H,
+  body: JSON.stringify({ items, autoPublish: AUTO_PUBLISH }),
 });
 console.log("نتيجة النشر:", res.status, await res.text());
