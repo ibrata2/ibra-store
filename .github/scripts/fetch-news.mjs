@@ -15,7 +15,9 @@ const FEEDS = [
   { url: "https://aitnews.com/feed/", lang: "ar", source: "البوابة العربية للأخبار التقنية", cat: "عام تقني" },
   { url: "https://www.tech-wd.com/wd/feed/", lang: "ar", source: "عالم التقنية", cat: "عام تقني" },
 ];
-const PER_FEED = 3; // أحدث كم خبر من كل مصدر
+// عدد المنشورات: يُضبط من متغيّرات GitHub (Variables) بدون تعديل الكود
+const PER_FEED = Math.max(1, +(process.env.NEWS_PER_FEED || 3)); // أحدث كم خبر من كل مصدر
+const PER_DAY  = Math.max(1, +(process.env.NEWS_PER_DAY  || 6)); // إجمالي المنشورات باليوم
 
 const parser = new Parser({ timeout: 20000, headers: { "User-Agent": "Mozilla/5.0 IBRA-STORE-bot" } });
 const strip = (s) => String(s || "").replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").replace(/\s+/g, " ").trim();
@@ -41,25 +43,44 @@ function guessCat(title, def) {
   return def;
 }
 
-const items = [];
+// 1) نجمع المرشحين الخام من كل مصدر (بدون ترجمة بعد)
+const perFeed = [];
 for (const f of FEEDS) {
   try {
     const feed = await parser.parseURL(f.url);
+    const arr = [];
     for (const it of (feed.items || []).slice(0, PER_FEED)) {
       const rawTitle = strip(it.title);
-      const rawDesc = strip(it.contentSnippet || it.content || it.summary || it["content:encoded"] || "");
       if (!rawTitle) continue;
-      const title = f.lang === "en" ? await translate(rawTitle) : rawTitle;
-      const excerpt = f.lang === "en" ? await translate(rawDesc.slice(0, 400)) : rawDesc.slice(0, 400);
-      const bodyTxt = f.lang === "en" ? await translate(rawDesc.slice(0, 1200)) : rawDesc.slice(0, 1200);
-      items.push({
-        title, excerpt, body: bodyTxt || excerpt,
-        image: firstImg(it), source: f.source, sourceUrl: it.link || "",
-        category: guessCat(rawTitle, f.cat),
-      });
+      const rawDesc = strip(it.contentSnippet || it.content || it.summary || it["content:encoded"] || "");
+      arr.push({ f, rawTitle, rawDesc, image: firstImg(it), sourceUrl: it.link || "" });
     }
-    console.log(`✔ ${f.source}: ${Math.min(PER_FEED, (feed.items || []).length)} عنصر`);
-  } catch (e) { console.log(`✘ ${f.source}: ${e.message}`); }
+    perFeed.push(arr);
+    console.log(`✔ ${f.source}: ${arr.length} عنصر`);
+  } catch (e) { console.log(`✘ ${f.source}: ${e.message}`); perFeed.push([]); }
+}
+
+// 2) نوزّعهم بالتناوب بين المصادر (مزيج عادل) ثم نقص على العدد المطلوب لليوم
+const mixed = [];
+for (let i = 0; mixed.length < PER_DAY; i++) {
+  let any = false;
+  for (const arr of perFeed) { if (arr[i]) { mixed.push(arr[i]); any = true; if (mixed.length >= PER_DAY) break; } }
+  if (!any) break;
+}
+console.log(`➜ المطلوب نشره اليوم: ${mixed.length} خبر (الحد: ${PER_DAY})`);
+
+// 3) نترجم المختارين فقط (توفير للوقت والطلبات)
+const items = [];
+for (const c of mixed) {
+  const en = c.f.lang === "en";
+  const title = en ? await translate(c.rawTitle) : c.rawTitle;
+  const excerpt = en ? await translate(c.rawDesc.slice(0, 400)) : c.rawDesc.slice(0, 400);
+  const bodyTxt = en ? await translate(c.rawDesc.slice(0, 1200)) : c.rawDesc.slice(0, 1200);
+  items.push({
+    title, excerpt, body: bodyTxt || excerpt,
+    image: c.image, source: c.f.source, sourceUrl: c.sourceUrl,
+    category: guessCat(c.rawTitle, c.f.cat),
+  });
 }
 
 if (!items.length) { console.log("ماكو أخبار"); process.exit(0); }
