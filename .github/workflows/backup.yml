@@ -1,0 +1,72 @@
+# IBRA STORE — نسخة احتياطية تلقائية كل 7 أيام
+# تحفظ نسخة داخل الموقع + ترفعها على رابط + ترسلها على الإيميل
+name: backup
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"   # كل أسبوع (الأحد الساعة 2 فجراً UTC = 5 فجراً بغداد)
+  workflow_dispatch:        # تشغيل يدوي بأي وقت
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SITE: ${{ vars.SITE_URL || 'https://ibraprogram.netlify.app' }}
+      ADMIN_PATH: ${{ vars.ADMIN_PATH || 'ibra-cp-eb21ba34' }}
+      ADMIN_KEY: ${{ secrets.ADMIN_PASSWORD }}
+      MAIL_USER: ${{ secrets.MAIL_USERNAME }}
+    steps:
+      - name: جلب النسخة وحفظها بالموقع
+        run: |
+          set -e
+          STAMP=$(TZ=Asia/Baghdad date +%Y-%m-%d)
+          NAME="ibra-store-backup-$STAMP.json"
+          echo "NAME=$NAME" >> $GITHUB_ENV
+          echo "STAMP=$STAMP" >> $GITHUB_ENV
+          curl -fsS "$SITE/api/admin/backup?save=1" -H "x-admin-key: $ADMIN_KEY" -o "$NAME"
+          SIZE=$(du -h "$NAME" | cut -f1); echo "SIZE=$SIZE" >> $GITHUB_ENV
+          echo "تم إنشاء $NAME ($SIZE)"
+
+      - name: رفع النسخة على رابط (Gofile)
+        run: |
+          R=$(curl -s -F "file=@$NAME" https://upload.gofile.io/uploadfile)
+          URL=$(echo "$R" | jq -r '.data.downloadPage // empty')
+          [ -z "$URL" ] && URL="(تعذّر الرفع — النسخة مرفقة بالإيميل ومحفوظة بالموقع)"
+          echo "LINK=$URL" >> $GITHUB_ENV
+          echo "رابط التحميل: $URL"
+
+      - name: إرسال الإيميل بالتفاصيل
+        if: ${{ env.MAIL_USER != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: IBRA STORE Backup <${{ secrets.MAIL_USERNAME }}>
+          to: Freeman.s2005@gmail.com
+          subject: "نسخة احتياطية — IBRA STORE — ${{ env.STAMP }}"
+          attachments: ${{ env.NAME }}
+          body: |
+            السلام عليكم،
+            هذي النسخة الاحتياطية التلقائية لموقع IBRA STORE بتاريخ ${{ env.STAMP }}.
+
+            ملف النسخة الاحتياطية مرفق بهذا الإيميل (${{ env.SIZE }})، ومحفوظة أيضاً داخل الموقع.
+
+            🔗 رابط تحميل النسخة: ${{ env.LINK }}
+
+            🌐 رابط الموقع:
+            ${{ env.SITE }}
+
+            🔐 صفحة الإدارة:
+            ${{ env.SITE }}/${{ env.ADMIN_PATH }}/
+
+            🔑 الرقم السري لصفحة الإدارة:
+            ${{ secrets.ADMIN_PASSWORD }}
+
+            ملاحظة: احتفظ بهذا الإيميل بمكان آمن — يحتوي الرقم السري.
+            لاسترجاع النسخة: افتح صفحة الإدارة ← نسخة احتياطية ← استرجاع، واختر الملف المرفق.
+
+            — نظام النسخ الاحتياطي التلقائي

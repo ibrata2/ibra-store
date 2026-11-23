@@ -557,7 +557,26 @@ export default async (req, context) => {
       }
 
       if (path === "/admin/backup" && m === "GET") {
-        return json({ apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), settings: await loadSettings(), at: now() });
+        const data = { apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), settings: await loadSettings(), at: now() };
+        // ?save=1 يحفظ نسخة داخل الموقع (آخر 10 نسخ)
+        if (url.searchParams.get("save") === "1") {
+          const id = bagdadDay() + "-" + uid(4);
+          await store("snapshots").setJSON("snap:" + id, data);
+          const idx = await getJSON("data", "snapIndex", []);
+          idx.unshift({ id, at: data.at, apps: data.apps.length, size: JSON.stringify(data).length });
+          for (const old of idx.slice(12)) { try { await store("snapshots").delete("snap:" + old.id); } catch {} }
+          await setJSON("data", "snapIndex", idx.slice(0, 12));
+        }
+        return json(data);
+      }
+      if (path === "/admin/snapshots" && m === "GET") return json(await getJSON("data", "snapIndex", []));
+      if ((mm = path.match(/^\/admin\/snapshot\/([^/]+)$/))) {
+        if (m === "GET") { const d = await store("snapshots").get("snap:" + mm[1], { type: "json" }); return d ? json(d) : err("غير موجودة", 404); }
+        if (m === "DELETE") {
+          try { await store("snapshots").delete("snap:" + mm[1]); } catch {}
+          await setJSON("data", "snapIndex", (await getJSON("data", "snapIndex", [])).filter((x) => x.id !== mm[1]));
+          return json({ ok: true });
+        }
       }
       if (path === "/admin/restore" && m === "POST") {
         if (Array.isArray(body.apps)) await saveApps(body.apps);

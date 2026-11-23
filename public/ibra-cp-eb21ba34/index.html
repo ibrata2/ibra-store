@@ -918,13 +918,32 @@ function drawSettings() {
 /* ========== نسخة احتياطية ========== */
 function drawBackup() {
   main.innerHTML = `<div class="topbar"><h1>نسخة احتياطية</h1></div>
-    <div class="sec glass"><h2>${I.download} تنزيل نسخة</h2><p class="sub" style="margin-bottom:14px">ملف JSON فيه كل التطبيقات والطلبات والإعدادات (الصور تبقى على الموقع).</p><button class="btn gold" id="bDl">تنزيل النسخة</button></div>
+    <div class="sec glass"><h2>${I.download} تنزيل / إنشاء نسخة</h2><p class="sub" style="margin-bottom:14px">ملف JSON فيه كل التطبيقات والطلبات والتقييمات والإعدادات (الصور تبقى على الموقع).</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn gold" id="bDl">${I.download} تنزيل نسخة</button><button class="btn" id="bSave">${I.cloud} حفظ نسخة بالموقع الآن</button></div></div>
+    <div class="sec glass"><h2>${I.clock} النسخ المحفوظة بالموقع <small style="font-family:var(--font);color:var(--dim);font-size:.8rem">— تلقائي كل 7 أيام + يدوي</small></h2><div id="snaps"><div class="spinner"></div></div></div>
     <div class="sec glass"><h2>${I.cloud} استرجاع نسخة</h2><p class="sub" style="margin-bottom:14px">⚠️ يستبدل البيانات الحالية بالكامل.</p><button class="btn danger" id="bUp">اختيار ملف واسترجاع</button></div>`;
-  $("#bDl").onclick = async () => {
-    const d = await api("/admin/backup");
-    const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" });
-    const u = URL.createObjectURL(blob), l = document.createElement("a");
-    l.href = u; l.download = `ibra-store-backup-${new Date().toISOString().slice(0, 10)}.json`; l.click(); URL.revokeObjectURL(u);
+  const dlData = (d, name) => { const blob = new Blob([JSON.stringify(d, null, 2)], { type: "application/json" }); const u = URL.createObjectURL(blob), l = document.createElement("a"); l.href = u; l.download = name; l.click(); URL.revokeObjectURL(u); };
+  $("#bDl").onclick = async () => dlData(await api("/admin/backup"), `ibra-store-backup-${new Date().toISOString().slice(0, 10)}.json`);
+  const loadSnaps = async () => {
+    try {
+      const list = await api("/admin/snapshots");
+      $("#snaps").innerHTML = list.length ? list.map((s) => `
+        <div class="row-app glass" data-snap="${s.id}" style="padding:12px 14px">
+          <div class="nm" style="flex:1"><b>${esc(s.id)}</b><small>${fmtDate(s.at)} · ${s.apps} تطبيق · ${(s.size / 1024).toFixed(0)} KB</small></div>
+          <div class="acts"><button class="btn sm gold" data-sdl="${s.id}">${I.download} تنزيل</button><button class="btn sm" data-srs="${s.id}">استرجاع</button><button class="btn sm danger" data-sdel="${s.id}">${I.trash}</button></div>
+        </div>`).join("") : '<div class="hint">ماكو نسخ محفوظة بعد — اضغط «حفظ نسخة بالموقع الآن» أو انتظر النسخة التلقائية.</div>';
+    } catch (er) { $("#snaps").innerHTML = `<div class="hint">${esc(er.message)}</div>`; }
+  };
+  loadSnaps();
+  $("#bSave").onclick = async () => { try { await api("/admin/backup?save=1"); toast("انحفظت نسخة بالموقع ✔"); loadSnaps(); } catch (er) { toast(er.message, true); } };
+  $("#snaps").onclick = async (e) => {
+    const b = e.target.closest("[data-sdl],[data-srs],[data-sdel]"); if (!b) return;
+    const id = b.dataset.sdl || b.dataset.srs || b.dataset.sdel;
+    try {
+      if (b.dataset.sdl) dlData(await api("/admin/snapshot/" + id), `ibra-store-backup-${id}.json`);
+      else if (b.dataset.srs) { if (!confirm("استرجاع هذي النسخة؟ راح تستبدل البيانات الحالية.")) return; await api("/admin/restore", { method: "POST", body: await api("/admin/snapshot/" + id) }); await refresh(); toast("تم الاسترجاع ✔"); }
+      else if (b.dataset.sdel) { if (!confirm("حذف هذي النسخة؟")) return; await api("/admin/snapshot/" + id, { method: "DELETE" }); loadSnaps(); }
+    } catch (er) { toast(er.message, true); }
   };
   $("#bUp").onclick = async () => {
     const [f] = await pickFiles(".json,application/json", false); if (!f) return;
