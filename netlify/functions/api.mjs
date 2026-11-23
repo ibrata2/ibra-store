@@ -86,6 +86,27 @@ const loadReports = () => getJSON("data", "reports", []);
 const saveReports = (r) => setJSON("data", "reports", r);
 const loadStats = () => getJSON("data", "stats", { total: 0, days: {} });
 const saveStats = (s) => setJSON("data", "stats", s);
+const loadNews = () => getJSON("data", "news", []);
+const saveNews = (n) => setJSON("data", "news", n);
+function normalizeNews(input, old = {}) {
+  return {
+    id: old.id || uid(10),
+    slug: slugify(input.slug || input.title || old.slug),
+    title: clean(input.title, 200),
+    excerpt: clean(input.excerpt, 600),
+    body: clean(input.body, 30000),
+    image: clean(input.image, 800),
+    source: clean(input.source, 80),
+    sourceUrl: clean(input.sourceUrl, 2000),
+    category: clean(input.category, 60) || "عام تقني",
+    createdAt: old.createdAt || now(),
+    updatedAt: now(),
+    published: input.published !== false,
+    pinned: !!input.pinned,
+    views: old.views || 0,
+  };
+}
+const publicNews = (n) => { const { ...r } = n; return r; };
 const bagdadDay = () => new Date(Date.now() + 3 * 3600_000).toISOString().slice(0, 10); // تاريخ بغداد
 const loadSettings = async () => ({ ...DEFAULT_SETTINGS, ...(await getJSON("data", "settings", {})) });
 
@@ -213,6 +234,26 @@ export default async (req, context) => {
     }
 
     let mm;
+
+    /* ===== الأخبار التقنية ===== */
+    if (path === "/news" && m === "GET") {
+      let list = (await loadNews()).filter((n) => n.published);
+      const cat = url.searchParams.get("category");
+      const q = (url.searchParams.get("q") || "").toLowerCase();
+      if (cat && cat !== "all") list = list.filter((n) => n.category === cat);
+      if (q) list = list.filter((n) => [n.title, n.excerpt, n.body, n.category].join(" ").toLowerCase().includes(q));
+      list.sort((a, b) => (b.pinned - a.pinned) || b.createdAt.localeCompare(a.createdAt));
+      const lim = Math.min(+url.searchParams.get("limit") || 200, 200);
+      return json(list.slice(0, lim).map(publicNews));
+    }
+    if ((mm = path.match(/^\/news\/([^/]+)$/)) && m === "GET") {
+      const key = decodeURIComponent(mm[1]);
+      const news = await loadNews();
+      const n = news.find((x) => (x.slug === key || x.id === key) && x.published);
+      if (!n) return err("الخبر غير موجود", 404);
+      if (url.searchParams.get("view") === "1") { n.views = (n.views || 0) + 1; await saveNews(news); }
+      return json(publicNews(n));
+    }
     if ((mm = path.match(/^\/apps\/([^/]+)$/)) && m === "GET") {
       const key = decodeURIComponent(mm[1]);
       const apps = await loadApps();
@@ -409,6 +450,52 @@ export default async (req, context) => {
 
       if (path === "/admin/check") return json({ ok: true });
 
+      /* ===== إدارة الأخبار ===== */
+      if (path === "/admin/news" && m === "GET") return json(await loadNews());
+      if (path === "/admin/news" && m === "POST") {
+        if (!clean(body.title)) return err("اكتب عنوان الخبر");
+        const news = await loadNews();
+        const n = normalizeNews(body);
+        while (news.some((x) => x.slug === n.slug)) n.slug += "-" + uid(3).toLowerCase();
+        news.unshift(n);
+        await saveNews(news);
+        return json(n);
+      }
+      // استقبال أخبار مجلوبة تلقائياً (من workflow) — قبل مطابقة :id
+      if (path === "/admin/news/ingest" && m === "POST") {
+        const news = await loadNews();
+        const seen = new Set(news.map((n) => n.sourceUrl).filter(Boolean));
+        const seenT = new Set(news.map((n) => (n.title || "").trim()));
+        let added = 0;
+        for (const it of (Array.isArray(body.items) ? body.items : []).slice(0, 40)) {
+          const su = clean(it.sourceUrl, 2000);
+          if (!clean(it.title) || (su && seen.has(su)) || seenT.has(clean(it.title, 200))) continue;
+          const n = normalizeNews({ ...it, published: body.autoPublish !== false });
+          while (news.some((x) => x.slug === n.slug)) n.slug += "-" + uid(3).toLowerCase();
+          news.unshift(n); seen.add(su); seenT.add(n.title); added++;
+        }
+        await saveNews(news.slice(0, 400));
+        return json({ ok: true, added });
+      }
+      // تعديل/حذف خبر — بعد ingest حتى لا تبتلع "ingest"
+      if ((mm = path.match(/^\/admin\/news\/([^/]+)$/))) {
+        const news = await loadNews();
+        const i = news.findIndex((n) => n.id === mm[1]);
+        if (i < 0) return err("الخبر غير موجود", 404);
+        if (m === "PUT") {
+          const n = normalizeNews(body, news[i]);
+          if (n.slug !== news[i].slug) while (news.some((x, j) => j !== i && x.slug === n.slug)) n.slug += "-" + uid(3).toLowerCase();
+          news[i] = n;
+          await saveNews(news);
+          return json(n);
+        }
+        if (m === "DELETE") {
+          news.splice(i, 1);
+          await saveNews(news);
+          return json({ ok: true });
+        }
+      }
+
       if (path === "/admin/apps" && m === "GET") return json(await loadApps());
 
       if (path === "/admin/apps" && m === "POST") {
@@ -557,7 +644,7 @@ export default async (req, context) => {
       }
 
       if (path === "/admin/backup" && m === "GET") {
-        const data = { apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), settings: await loadSettings(), at: now() };
+        const data = { apps: await loadApps(), requests: await loadReqs(), reports: await loadReports(), raters: await loadRaters(), stats: await loadStats(), news: await loadNews(), settings: await loadSettings(), at: now() };
         // ?save=1 يحفظ نسخة داخل الموقع (آخر 10 نسخ)
         if (url.searchParams.get("save") === "1") {
           const id = bagdadDay() + "-" + uid(4);
@@ -584,6 +671,7 @@ export default async (req, context) => {
         if (Array.isArray(body.reports)) await saveReports(body.reports);
         if (body.raters && typeof body.raters === "object") await saveRaters(body.raters);
         if (body.stats && typeof body.stats === "object") await saveStats(body.stats);
+        if (Array.isArray(body.news)) await saveNews(body.news);
         if (body.settings) await setJSON("data", "settings", body.settings);
         return json({ ok: true });
       }

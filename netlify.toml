@@ -34,3 +34,13 @@
     X-Robots-Tag = "noindex, nofollow"
     X-Frame-Options = "DENY"
     Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/news/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/news"
+  to = "/index.html"
+  status = 200

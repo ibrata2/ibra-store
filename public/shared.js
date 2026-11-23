@@ -47,6 +47,9 @@ const IB = (() => {
     medal: ico('<circle cx="12" cy="14" r="6"/><path d="M8.5 9 7 3h10l-1.5 6M12 11.5l1 2 2 .2-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L9 13.7l2-.2z"/>'),
     rows: ico('<rect x="3" y="4" width="18" height="5" rx="1.5"/><rect x="3" y="12" width="18" height="5" rx="1.5"/>'),
     layout: ico('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16M3 10h12"/>'),
+    whatsapp: ico('<path d="M3 21l1.6-4.2A8 8 0 1 1 8 19.5z"/><path d="M8.5 9c0 4 3 6.5 6.5 6.5.7-1.2.2-1.6-.5-2-1-.6-1.3.6-2 .3-1-.5-2.1-1.6-2.6-2.6-.3-.7.9-1 .3-2-.4-.7-.8-1.2-2-.5"/>'),
+    facebook: ico('<path d="M14 8h2V5h-2a3 3 0 0 0-3 3v2H9v3h2v6h3v-6h2.2l.8-3H14V8.5c0-.4.3-.5.5-.5z"/>'),
+    xcom: ico('<path d="M4 4l16 16M20 4 4 20"/>'),
   };
 
   // أيقونة القسم حسب اسمه
@@ -210,5 +213,36 @@ const IB = (() => {
     } catch { return ""; }
   }
 
-  return { icons, PLATFORMS, HOSTS, THEMES, catIcon, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker };
+  // ===== مشاركة المنشور =====
+  function shareBar(url, title) {
+    return `<div class="sharebar" data-url="${esc(url)}" data-title="${esc(title)}">
+      <span class="sh-lbl">${icons.share} مشاركة المنشور:</span>
+      <button data-sh="native" class="sh-btn">مشاركة (ستوري / رسالة / تطبيقات)</button>
+      <button data-sh="whatsapp" class="sh-btn" title="واتساب">${icons.whatsapp}</button>
+      <button data-sh="telegram" class="sh-btn" title="تيليكرام">${icons.telegram}</button>
+      <button data-sh="facebook" class="sh-btn" title="فيسبوك">${icons.facebook}</button>
+      <button data-sh="x" class="sh-btn" title="X">${icons.xcom}</button>
+      <button data-sh="copy" class="sh-btn">${icons.copy} نسخ رابط المنشور</button>
+    </div>`;
+  }
+  function doShare(kind, url, title) {
+    const u = encodeURIComponent(url), t = encodeURIComponent(title || "");
+    const map = {
+      whatsapp: `https://wa.me/?text=${t}%20${u}`,
+      telegram: `https://t.me/share/url?url=${u}&text=${t}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
+      x: `https://twitter.com/intent/tweet?url=${u}&text=${t}`,
+    };
+    if (kind === "copy") return copy(url);
+    if (kind === "native") { if (navigator.share) { navigator.share({ title, url }).catch(() => {}); return; } return copy(url); }
+    window.open(map[kind], "_blank", "noopener");
+  }
+  function wireShare(root) {
+    (root || document).querySelectorAll(".sharebar").forEach((bar) => {
+      if (bar._wired) return; bar._wired = 1;
+      bar.addEventListener("click", (e) => { const b = e.target.closest("[data-sh]"); if (!b) return; doShare(b.dataset.sh, bar.dataset.url, bar.dataset.title); });
+    });
+  }
+
+  return { icons, PLATFORMS, HOSTS, THEMES, catIcon, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker, shareBar, doShare, wireShare };
 })();

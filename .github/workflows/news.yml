@@ -1,0 +1,23 @@
+# IBRA STORE — جلب الأخبار التقنية يومياً وترجمتها للعربية ونشرها
+name: news
+
+on:
+  schedule:
+    - cron: "0 6 * * *"    # كل يوم 6 صباحاً UTC = 9 صباحاً بغداد
+  workflow_dispatch:         # تشغيل يدوي
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SITE: ${{ vars.SITE_URL || 'https://ibraprogram.netlify.app' }}
+      ADMIN_KEY: ${{ secrets.ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: تثبيت rss-parser
+        run: npm init -y >/dev/null 2>&1 && npm i rss-parser@3 --silent
+      - name: جلب ونشر الأخبار
+        run: node .github/scripts/fetch-news.mjs

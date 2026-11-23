@@ -166,6 +166,7 @@ pre.post{white-space:pre-wrap;background:var(--sunken);border:1px solid var(--li
     <div class="brand"><div class="logo"><span class="gold-text">IB</span></div><div><b class="gold-text">IBRA STORE</b><small>لوحة الإدارة</small></div></div>
     <button class="tab on" data-t="apps"></button>
     <button class="tab" data-t="distribute"></button>
+    <button class="tab" data-t="news"></button>
     <button class="tab" data-t="requests"></button>
     <button class="tab" data-t="reports"></button>
     <button class="tab" data-t="settings"></button>
@@ -224,7 +225,8 @@ function guessCats(a) {
   return [...out];
 }
 
-const TABS = { apps: [I.grid, "التطبيقات"], distribute: [I.folder, "توزيع الأقسام"], requests: [I.chat, "الطلبات"], reports: [I.warn, "بلاغات الروابط"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
+const TABS = { apps: [I.grid, "التطبيقات"], distribute: [I.folder, "توزيع الأقسام"], news: [I.fire, "الأخبار التقنية"], requests: [I.chat, "الطلبات"], reports: [I.warn, "بلاغات الروابط"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
+const NEWS_CATS = ["الذكاء الاصطناعي", "البرامج والتطبيقات", "الهواتف", "الأمن السيبراني", "الحواسيب والأجهزة", "الإنترنت والشبكات", "الألعاب", "عام تقني"];
 $$(".side .tab").forEach((b) => (b.innerHTML = `${TABS[b.dataset.t][0]}<span>${TABS[b.dataset.t][1]}</span>${b.dataset.t === "requests" ? '<span class="count" id="newCount" hidden></span>' : b.dataset.t === "reports" ? '<span class="count" id="repCount" hidden style="background:var(--bad);color:#fff"></span>' : ""}`));
 $$(".side .tab").forEach((b) => (b.onclick = () => openTab(b.dataset.t)));
 
@@ -252,7 +254,7 @@ async function refresh() {
 function openTab(t) {
   TAB = t;
   $$(".side .tab").forEach((b) => b.classList.toggle("on", b.dataset.t === t));
-  ({ apps: drawApps, distribute: drawDistribute, requests: drawRequests, reports: drawReports, settings: drawSettings, backup: drawBackup })[t]();
+  ({ apps: drawApps, distribute: drawDistribute, news: drawNews, requests: drawRequests, reports: drawReports, settings: drawSettings, backup: drawBackup })[t]();
   scrollTo(0, 0);
 }
 
@@ -743,6 +745,69 @@ function showPost(a) {
   $("#postClose").onclick = () => m.classList.remove("open");
   m.onclick = (e) => { if (e.target === m) m.classList.remove("open"); };
   draw(); m.classList.add("open");
+}
+
+/* ========== إدارة الأخبار ========== */
+let NEWS = [];
+async function drawNews() {
+  main.innerHTML = '<div class="topbar"><h1>الأخبار التقنية</h1></div><div class="spinner"></div>';
+  try { NEWS = await api("/admin/news"); } catch (er) { main.innerHTML = `<div class="empty glass">${esc(er.message)}</div>`; return; }
+  listNews();
+}
+function listNews() {
+  main.innerHTML = `
+    <div class="topbar"><h1>الأخبار التقنية</h1><span class="sp"></span><button class="btn gold" id="newNews">${I.plus} خبر جديد</button></div>
+    <p class="sub" style="margin-bottom:14px">الأخبار تُجلب تلقائياً كل يوم وتُترجم للعربية، وتكدر تضيف/تعدّل يدوياً. ${NEWS.length} خبر.</p>
+    <div id="nlist">${NEWS.length ? [...NEWS].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((n) => `
+      <div class="row-app glass" data-id="${n.id}">
+        <div class="app-icon" style="width:56px;height:44px;border-radius:10px;${n.image ? `background:url('${esc(n.image)}') center/cover` : ""}">${n.image ? "" : I.fire}</div>
+        <div class="nm" style="flex:1"><b>${esc(n.title)}</b><small>${esc(n.category)} · ${fmtDate(n.createdAt)}${n.source ? " · " + esc(n.source) : ""}</small></div>
+        <div class="acts">
+          ${n.pinned ? '<span class="chip gold">مثبّت</span>' : ""}${n.published ? "" : '<span class="chip pill-off">مخفي</span>'}
+          <a class="btn sm" href="/news/${encodeURIComponent(n.slug)}" target="_blank">${I.eye}</a>
+          <button class="btn sm" data-edit="${n.id}">${I.edit} تعديل</button>
+          <button class="btn sm danger" data-del="${n.id}">${I.trash}</button>
+        </div>
+      </div>`).join("") : '<div class="empty glass"><div class="big">📰</div>ماكو أخبار بعد — اضغط «خبر جديد» أو انتظر الجلب التلقائي</div>'}</div>`;
+  $("#newNews").onclick = () => editNews(null);
+  $("#nlist").onclick = async (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.edit) editNews(NEWS.find((n) => n.id === b.dataset.edit));
+    if (b.dataset.del) { const n = NEWS.find((x) => x.id === b.dataset.del); if (!confirm(`حذف الخبر "${n.title}"؟`)) return; try { await api("/admin/news/" + n.id, { method: "DELETE" }); NEWS = NEWS.filter((x) => x.id !== n.id); listNews(); toast("انحذف"); } catch (er) { toast(er.message, true); } }
+  };
+}
+function editNews(news) {
+  const isNew = !news;
+  const n = JSON.parse(JSON.stringify(news || { title: "", category: "عام تقني", published: true }));
+  main.innerHTML = `
+    <div class="topbar"><button class="btn sm ghost" id="back">→ رجوع</button><h1>${isNew ? "خبر جديد" : "تعديل الخبر"}</h1></div>
+    <div class="sec glass"><div class="ed-grid">
+      <div class="field full"><label>عنوان الخبر *</label><input class="input" id="n_title" value="${esc(n.title || "")}"></div>
+      <div class="field"><label>القسم</label><input class="input" id="n_category" list="ncats" value="${esc(n.category || "")}"><datalist id="ncats">${NEWS_CATS.map((c) => `<option value="${esc(c)}">`).join("")}</datalist></div>
+      <div class="field"><label>المصدر (اسم الموقع)</label><input class="input" id="n_source" value="${esc(n.source || "")}" placeholder="مثلاً: The Verge"></div>
+      <div class="field full"><label>مقتطف قصير (يظهر بالكارت)</label><textarea class="input" id="n_excerpt" style="min-height:70px">${esc(n.excerpt || "")}</textarea></div>
+      <div class="field full"><label>نص الخبر الكامل</label><textarea class="input" id="n_body" style="min-height:200px">${esc(n.body || "")}</textarea></div>
+      <div class="field full"><label>رابط الخبر الأصلي (اختياري)</label><input class="input" id="n_sourceUrl" dir="ltr" value="${esc(n.sourceUrl || "")}"></div>
+      <div class="field full"><label>صورة الخبر</label>
+        <div class="img-one"><div class="prev wide" id="nImgPrev"></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><button class="btn sm" id="nImgUp">${I.cloud} رفع صورة</button><input class="input" id="n_image" dir="ltr" placeholder="أو الصق رابط صورة" value="${esc(n.image || "")}" style="font-size:.8rem"></div></div></div>
+      <div class="full" style="display:flex;gap:26px;flex-wrap:wrap">
+        <label class="switch"><input type="checkbox" id="n_published" ${n.published !== false ? "checked" : ""}><i></i>منشور</label>
+        <label class="switch"><input type="checkbox" id="n_pinned" ${n.pinned ? "checked" : ""}><i></i>مثبّت بالأعلى</label>
+      </div>
+    </div></div>
+    <div class="savebar glass"><button class="btn gold" id="nSave">${I.check} ${isNew ? "نشر الخبر" : "حفظ"}</button>${isNew ? "" : `<a class="btn" href="/news/${encodeURIComponent(n.slug)}" target="_blank">${I.eye} عرض</a>`}</div>`;
+  $("#back").onclick = () => listNews();
+  const drawImg = () => { const v = $("#n_image").value.trim(); $("#nImgPrev").style.backgroundImage = v ? `url('${v}')` : ""; $("#nImgPrev").textContent = v ? "" : "لا توجد"; };
+  drawImg();
+  $("#n_image").oninput = drawImg;
+  $("#nImgUp").onclick = async () => { const [f] = await pickFiles("image/*", false); if (!f) return; toast("جاري الرفع…"); try { $("#n_image").value = await uploadImage(f, 1200); drawImg(); toast("تم ✔"); } catch (er) { toast(er.message, true); } };
+  $("#nSave").onclick = async () => {
+    const body = { ...n, title: $("#n_title").value.trim(), category: $("#n_category").value.trim(), source: $("#n_source").value.trim(), excerpt: $("#n_excerpt").value.trim(), body: $("#n_body").value.trim(), sourceUrl: $("#n_sourceUrl").value.trim(), image: $("#n_image").value.trim(), published: $("#n_published").checked, pinned: $("#n_pinned").checked };
+    if (!body.title) return toast("اكتب عنوان الخبر", true);
+    $("#nSave").disabled = true;
+    try { const saved = await api(isNew ? "/admin/news" : "/admin/news/" + n.id, { method: isNew ? "POST" : "PUT", body }); const i = NEWS.findIndex((x) => x.id === saved.id); if (i >= 0) NEWS[i] = saved; else NEWS.unshift(saved); toast("انحفظ ✔"); listNews(); } catch (er) { toast(er.message, true); $("#nSave").disabled = false; }
+  };
 }
 
 /* ========== توزيع الأقسام ========== */
