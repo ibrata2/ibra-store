@@ -202,6 +202,34 @@ function readmeImages(md, repo, branch) {
     .map((u) => /^https?:\/\//.test(u) ? u : `https://raw.githubusercontent.com/${repo}/${branch}/${u.replace(/^\.?\//, "")}`)
     .filter((u) => !/shields\.io|badge|\/badges?\/|\.svg(\?|#|$)/i.test(u));
 }
+// تحويل Markdown لنص عربي نظيف يعرضه الموقع (يحافظ على نقاط -)
+function mdToText(md) {
+  return String(md || "")
+    .replace(/```[\s\S]*?```/g, "")                 // بلوكات كود
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")           // صور
+    .replace(/<img[^>]*>/gi, "")                    // صور html
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")        // روابط → النص فقط
+    .replace(/^\s{0,3}#{1,6}\s*/gm, "")             // عناوين #
+    .replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1").replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s*>\s?/gm, "")                       // اقتباس
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+// أول فقرة وصف من README (بعد العنوان)
+function readmeTagline(md) {
+  const lines = mdToText(md).split("\n").map((l) => l.trim()).filter(Boolean);
+  for (const l of lines) { if (l.length > 15 && !/^[-•*]/.test(l)) return l.slice(0, 200); }
+  return "";
+}
+// H1 من README
+function readmeTitle(md) { const m = String(md || "").match(/^\s{0,3}#\s+(.+)/m); return m ? m[1].trim() : ""; }
+// مميزات من قسم "## المميزات" (نقاط -)
+function readmeFeatures(md) {
+  const m = String(md || "").match(/##+\s*(?:المميزات|المزايا|Features)[^\n]*\n([\s\S]*?)(?:\n##\s|\n#\s|$)/i);
+  if (!m) return [];
+  return m[1].split("\n").map((l) => l.match(/^\s*[-•*]\s+(.*)/)).filter(Boolean)
+    .map((x) => mdToText(x[1]).replace(/^([^:：]{1,40})[:：]\s*/, "$1: ").slice(0, 200)).filter(Boolean).slice(0, 30);
+}
 function guessAppCat(text) {
   const t = (text || "").toLowerCase();
   if (/(game|لعبة|العاب|ألعاب|platformer|rpg)/.test(t)) return "الألعاب";
@@ -775,32 +803,39 @@ export default async (req, context) => {
         if (!info) return err("ما لگيت المستودع — تأكد من الاسم (وإذا خاص أضف GH_PAT)", 404);
         const branch = info.default_branch || "main";
         const rel = await ghJSON(`https://api.github.com/repos/${repo}/releases/latest`, token);
-        const readme = await ghJSON(`https://api.github.com/repos/${repo}/readme`, token);
-        const readmeMd = readme && readme.content ? Buffer.from(readme.content, "base64").toString("utf8") : "";
+        // README (جرّب الفرع الافتراضي ثم main/master مباشرة)
+        let readmeMd = "";
+        const rd = await ghJSON(`https://api.github.com/repos/${repo}/readme`, token);
+        if (rd && rd.content) readmeMd = Buffer.from(rd.content, "base64").toString("utf8");
+        if (!readmeMd) for (const b of [branch, "main", "master"]) { const r = await fetchBytes(`https://raw.githubusercontent.com/${repo}/${b}/README.md`); if (r) { readmeMd = r.buf.toString("utf8"); break; } }
 
-        // الأيقونة: جرّب مسارات شائعة ثم صورة المالك
-        let icon = "";
-        const iconPaths = ["build/icon.png", "icon.png", "assets/icon.png", "public/icon.png", "public/favicon.png", "resources/icon.png", "src-tauri/icons/128x128.png", "assets/logo.png", "logo.png"];
-        for (const p of iconPaths) { icon = await storeImageFrom(`https://raw.githubusercontent.com/${repo}/${branch}/${p}`); if (icon) break; }
-        if (!icon && info.owner?.avatar_url) icon = await storeImageFrom(info.owner.avatar_url);
-
-        // صور من README (حتى 5، نتخطى اللي صارت أيقونة)
-        const shots = [];
-        for (const u of readmeImages(readmeMd, repo, branch).slice(0, 7)) {
-          if (shots.length >= 5) break;
-          const s = await storeImageFrom(u); if (s) shots.push(s);
-        }
-
-        const name = clean(info.name, 120).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        // النصوص: حقل الوصف إن وُجد، وإلا من README
+        const name = readmeTitle(readmeMd) || clean(info.name, 120).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const tagline = clean(info.description, 200) || readmeTagline(readmeMd);
+        const description = readmeMd ? mdToText(readmeMd).slice(0, 20000) : clean(info.description, 20000);
+        const features = readmeFeatures(readmeMd);
         const version = rel ? clean(rel.tag_name || rel.name, 40).replace(/^v/i, "") : "";
         const keywords = [...new Set([...(Array.isArray(info.topics) ? info.topics : []), "ابراهيم الخزرجي"])].map((k) => clean(k, 50)).filter(Boolean).slice(0, 20);
-        const cat = guessAppCat(name + " " + (info.description || "") + " " + keywords.join(" "));
+        const cat = guessAppCat(name + " " + tagline + " " + description.slice(0, 500) + " " + keywords.join(" "));
+
+        // الصور من README أولاً (أول صورة كبيرة للكفر/الأيقونة)
+        const imgUrls = readmeImages(readmeMd, repo, branch);
+        const shots = [];
+        for (const u of imgUrls.slice(0, 8)) { if (shots.length >= 5) break; const s = await storeImageFrom(u); if (s) shots.push(s); }
+
+        // الأيقونة: مسارات شائعة ثم أول صورة README ثم صورة المالك
+        let icon = "";
+        for (const p of ["build/icon.png", "icon.png", "assets/icon.png", "public/icon.png", "src-tauri/icons/128x128.png", "assets/logo.png", "logo.png"]) {
+          icon = await storeImageFrom(`https://raw.githubusercontent.com/${repo}/${branch}/${p}`); if (icon) break;
+        }
+        if (!icon && shots.length) icon = shots[0];
+        if (!icon && info.owner && info.owner.avatar_url) icon = await storeImageFrom(info.owner.avatar_url);
 
         const apps = await loadApps();
         const draft = normalizeApp({
           name: name || repo.split("/")[1],
-          tagline: clean(info.description, 200),
-          description: clean(info.description, 20000),
+          tagline, description,
+          features,
           version, changelog: rel ? clean(rel.body, 6000) : "",
           github: repo, keywords,
           categories: cat ? [cat] : [],
