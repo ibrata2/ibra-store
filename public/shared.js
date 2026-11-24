@@ -253,5 +253,18 @@ const IB = (() => {
     });
   }
 
-  return { icons, PLATFORMS, HOSTS, THEMES, catIcon, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker, shareBar, doShare, wireShare };
+  // حالات التطبيق (يحددها المطور ليعرف الزائر وضع البرنامج)
+  const STATUSES = {
+    stable:      { label: "مستقر — يعمل ممتاز", icon: "✅", color: "#2ea043" },
+    recommended: { label: "اختيار المطور",      icon: "⭐", color: "#e0a92a" },
+    new:         { label: "جديد",               icon: "🆕", color: "#3b82f6" },
+    beta:        { label: "تجريبي — قيد الاختبار", icon: "🧪", color: "#d08516" },
+    issues:      { label: "فيه مشاكل معروفة",    icon: "⚠️", color: "#e5534b" },
+  };
+  function statusBadge(key, small) {
+    const s = STATUSES[key]; if (!s) return "";
+    return `<span class="status-badge${small ? " sm" : ""}" style="--sc:${s.color}">${s.icon} ${esc(s.label)}</span>`;
+  }
+
+  return { icons, PLATFORMS, HOSTS, THEMES, STATUSES, statusBadge, catIcon, detectHost, toDirect, videoEmbed, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, applyTheme, savedTheme, setTheme, mountThemePicker, shareBar, doShare, wireShare };
 })();

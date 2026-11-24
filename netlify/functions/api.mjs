@@ -248,6 +248,7 @@ function normalizeApp(input, old = {}) {
     category: categories[0] || "",
     categories,
     version: clean(input.version, 40),
+    status: ["stable", "recommended", "new", "beta", "issues"].includes(input.status) ? input.status : "",
     github: clean(input.github, 120).replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, ""),
     versions: (Array.isArray(input.versions) ? input.versions : (Array.isArray(old.versions) ? old.versions : []))
       .map((v) => ({ version: clean(v.version, 40), date: clean(v.date, 40) || now(), changelog: clean(v.changelog, 6000) }))

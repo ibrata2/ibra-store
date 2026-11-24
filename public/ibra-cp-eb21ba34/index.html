@@ -482,6 +482,12 @@ function editApp(app) {
       </div>
       <div class="field full"><label>ما الجديد بهذا الإصدار</label><textarea class="input" id="f_changelog" style="min-height:80px">${esc(a.changelog || "")}</textarea></div>
       ${(a.versions && a.versions.length) ? `<div class="field full"><label>سجل النسخ السابقة (محفوظ — ما ينمسح)</label><div class="vhist">${a.versions.map((v) => `<div class="vrow"><b>${esc(v.version)}</b><small>${v.date ? fmtDate(v.date) : ""}</small>${v.changelog ? `<div class="vlog">${esc(v.changelog)}</div>` : ""}</div>`).join("")}</div></div>` : ""}
+      <div class="field full"><label>حالة البرنامج (علامة تظهر للزائر)</label>
+        <select class="input" id="f_status">
+          <option value="" ${!a.status ? "selected" : ""}>بدون علامة</option>
+          ${Object.entries(IB.STATUSES).map(([k, s]) => `<option value="${k}" ${a.status === k ? "selected" : ""}>${s.icon} ${esc(s.label)}</option>`).join("")}
+        </select>
+      </div>
       <div class="full" style="display:flex;gap:26px;flex-wrap:wrap">
         <label class="switch"><input type="checkbox" id="f_published" ${a.published !== false ? "checked" : ""}><i></i>منشور (يظهر بالموقع)</label>
         <label class="switch"><input type="checkbox" id="f_featured" ${a.featured ? "checked" : ""}><i></i>تطبيق مميز (يظهر بالأعلى)</label>
@@ -772,7 +778,7 @@ function editApp(app) {
       categories: a.categories, category: a.categories[0] || "", version: g("version"), size: g("size"), language: g("language"),
       requirements: g("requirements"), changelog: g("changelog"), video: g("video"),
       github: g("github"), versions: a.versions || [],
-      published: $("#f_published").checked, featured: $("#f_featured").checked, platforms,
+      status: $("#f_status").value, published: $("#f_published").checked, featured: $("#f_featured").checked, platforms,
     };
   };
   const save = async () => {

@@ -444,7 +444,7 @@ body.is-home #layWrap{display:block}
 
 <script src="/shared.js"></script>
 <script>
-const { icons: I, PLATFORMS, HOSTS, catIcon, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, videoEmbed, shareBar, wireShare } = IB;
+const { icons: I, PLATFORMS, HOSTS, catIcon, esc, api, toast, fmtDate, fmtAgo, fmtNum, copy, videoEmbed, shareBar, wireShare, statusBadge } = IB;
 const $ = (s, r = document) => r.querySelector(s);
 const view = $("#view");
 let S = {}, APPS = null, USER = null;
@@ -555,6 +555,7 @@ const cardGrid = (a, i = 0) => `
     ${a.featured ? '<span class="badge-feat">مميز</span>' : ""}
     <div class="top">${iconHTML(a)}<div><h3>${esc(a.name)}</h3>${a.category ? `<span class="chip" style="margin-top:4px">${esc(a.category)}</span>` : ""}</div></div>
     <p class="tag">${esc(a.tagline || a.description?.slice(0, 120) || "")}</p>
+    ${a.status ? statusBadge(a.status, true) : ""}
     ${starDisplay(a.rating)}
     <div class="bottom">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span></div>
   </article>`;
@@ -564,6 +565,7 @@ const cardStore = (a, i = 0) => `
     <div class="si">${iconHTML(a)}</div>
     <h3>${esc(a.name)}</h3>
     <p>${esc(a.tagline || a.description?.slice(0, 70) || "")}</p>
+    ${a.status ? statusBadge(a.status, true) : ""}
     ${starDisplay(a.rating)}
     <div class="smeta"><span>${platIcons(a)}</span><span class="dl-count">${I.download}${fmtNum(a.downloads)}</span>${a.size ? `<span class="chip">${esc(a.size)}</span>` : ""}</div>
     <span class="btn gold sm dlbtn">${I.download} تحميل الآن</span>
@@ -575,6 +577,7 @@ const cardCover = (a, i = 0) => `
     <div class="cbody">
       <div class="top">${iconHTML(a)}<div><h3>${esc(a.name)}</h3>${a.category ? `<span class="chip" style="margin-top:4px">${esc(a.category)}</span>` : ""}</div></div>
       <p class="tag">${esc(a.tagline || a.description?.slice(0, 120) || "")}</p>
+      ${a.status ? statusBadge(a.status, true) : ""}
       <div class="bottom">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span></div>
     </div>
   </article>`;
@@ -582,7 +585,7 @@ const rowList = (a) => `
   <article class="lrow glass fade" data-slug="${esc(a.slug)}">
     ${iconHTML(a)}
     <div class="lx"><h3>${esc(a.name)} ${a.featured ? '<span class="chip gold" style="font-size:.7rem">مميز</span>' : ""}</h3><p>${esc(a.tagline || a.description?.slice(0, 160) || "")}</p>
-      <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">${a.category ? `<span class="chip">${esc(a.category)}</span>` : ""}${a.version ? `<span class="chip">${esc(a.version)}</span>` : ""}</div></div>
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">${a.status ? statusBadge(a.status, true) : ""}${a.category ? `<span class="chip">${esc(a.category)}</span>` : ""}${a.version ? `<span class="chip">${esc(a.version)}</span>` : ""}</div></div>
     <div class="lr">${platIcons(a)}<span class="dl-count">${I.download}${fmtNum(a.downloads)}</span><span class="btn gold sm">تحميل</span></div>
   </article>`;
 
@@ -778,6 +781,7 @@ async function renderApp(slug) {
       <h1>${esc(a.name)}</h1>
       <p class="sub">${esc(a.tagline)}</p>
       <div class="meta">
+        ${statusBadge(a.status)}
         ${starDisplay(a.rating)}
         ${plats.map((p) => `<span class="chip gold">${I[p]} ${PLATFORMS[p].name}</span>`).join("")}
         ${a.version ? `<span class="chip gold">الأحدث v${esc(a.version)}</span>` : ""}

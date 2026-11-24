@@ -231,3 +231,7 @@ select.input option{background:var(--option-bg)}
 
 .footer{border-top:1px solid var(--line2);margin-top:60px;padding:30px 0;color:var(--dim);font-size:.85rem}
 .footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+
+/* علامة حالة البرنامج */
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:700;color:var(--sc,#888);background:color-mix(in srgb,var(--sc,#888) 14%,transparent);border:1px solid color-mix(in srgb,var(--sc,#888) 45%,transparent);padding:3px 11px;border-radius:99px;line-height:1.4}
+.status-badge.sm{font-size:.74rem;padding:2px 9px;margin:2px 0}
