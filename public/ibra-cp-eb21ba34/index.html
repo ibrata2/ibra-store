@@ -285,7 +285,8 @@ function drawApps() {
   main.innerHTML = `
   <div class="topbar"><h1>التطبيقات</h1><span class="sp"></span>
     <label class="switch sm" title="يقارن نسختك بآخر إصدار على GitHub"><input type="checkbox" id="autoChk" ${localStorage.getItem("ib_autocheck") === "0" ? "" : "checked"}><i></i>فحص تلقائي للتحديثات</label>
-    <button class="btn" id="ghImport">${I.cloud} جلب من GitHub</button>
+    <button class="btn" id="ghDiscover">${I.search || I.cloud} اكتشاف من GitHub</button>
+    <button class="btn" id="ghImport">${I.cloud} جلب برابط</button>
     <button class="btn gold" id="newApp">${I.plus} تطبيق جديد</button></div>
   <div class="visitors glass">
     <div class="vh">${I.user} زوّار الموقع</div>
@@ -319,6 +320,7 @@ function drawApps() {
       </div>
     </div>`).join("") : `<div class="empty glass"><div class="big">📦</div>ماكو تطبيقات بعد — اضغط "تطبيق جديد" وانشر أول برنامج</div>`}</div>`;
   $("#newApp").onclick = () => editApp(null);
+  $("#ghDiscover").onclick = () => discoverGitHub();
   $("#ghImport").onclick = async () => {
     const repo = (prompt("اكتب اسم مستودع GitHub للتطبيق الجديد (مثال: ibrata2/ibra-lens):", "ibrata2/") || "").trim();
     if (!repo || !/\/[^/]+$/.test(repo)) return;
@@ -347,6 +349,48 @@ function drawApps() {
     }
   };
   checkUpdates();
+}
+
+// اكتشاف مستودعات GitHub غير المنشورة واستيرادها
+async function discoverGitHub() {
+  main.innerHTML = `<div class="topbar"><button class="btn sm ghost" id="back">→ رجوع</button><h1>اكتشاف من GitHub</h1></div><div class="spinner"></div>`;
+  $("#back").onclick = () => drawApps();
+  let data;
+  try { data = await api("/admin/github-discover"); }
+  catch (er) { main.innerHTML = `<div class="topbar"><button class="btn sm ghost" id="b2">→ رجوع</button><h1>اكتشاف من GitHub</h1></div><div class="empty glass">${esc(er.message)}</div>`; $("#b2").onclick = () => drawApps(); return; }
+  if (!data.repos.length) {
+    main.innerHTML = `<div class="topbar"><button class="btn sm ghost" id="b2">→ رجوع</button><h1>اكتشاف من GitHub</h1></div><div class="empty glass"><div class="big">✅</div>كل مستودعاتك منشورة — ماكو شي جديد</div>`;
+    $("#b2").onclick = () => drawApps(); return;
+  }
+  main.innerHTML = `
+    <div class="topbar"><button class="btn sm ghost" id="back">→ رجوع</button><h1>اكتشاف من GitHub</h1><span class="sp"></span>
+      <button class="btn gold" id="impSel">${I.cloud} استيراد المحدد (0)</button></div>
+    <p class="sub" style="margin-bottom:12px">هذي مستودعاتك (${esc(data.owner)}) اللي <b>مو منشورة</b> بعد — ${data.count} مستودع. أشّر اللي تريد تنشره واضغط استيراد.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn sm" id="selAll">تحديد الكل</button><button class="btn sm" id="selNone">إلغاء</button></div>
+    <div id="repoList">${data.repos.map((r) => `
+      <label class="row-app glass" style="cursor:pointer">
+        <input type="checkbox" class="rchk" value="${esc(r.repo)}" style="width:20px;height:20px;accent-color:var(--gold);flex:none">
+        <div class="nm" style="flex:1"><b>${esc(r.name)}</b><small dir="ltr" style="opacity:.6">${esc(r.repo)}</small>${r.description ? `<small>${esc(r.description)}</small>` : '<small style="opacity:.5">بدون وصف — راح يُجلب من README</small>'}</div>
+        ${r.language ? `<span class="chip">${esc(r.language)}</span>` : ""}
+      </label>`).join("")}</div>`;
+  $("#back").onclick = () => drawApps();
+  const upd = () => { const n = document.querySelectorAll(".rchk:checked").length; $("#impSel").innerHTML = `${I.cloud} استيراد المحدد (${n})`; };
+  $("#repoList").onchange = upd;
+  $("#selAll").onclick = () => { document.querySelectorAll(".rchk").forEach((c) => c.checked = true); upd(); };
+  $("#selNone").onclick = () => { document.querySelectorAll(".rchk").forEach((c) => c.checked = false); upd(); };
+  $("#impSel").onclick = async () => {
+    const sel = [...document.querySelectorAll(".rchk:checked")].map((c) => c.value);
+    if (!sel.length) return toast("أشّر مستودع واحد على الأقل", true);
+    if (!confirm(`استيراد ${sel.length} تطبيق من GitHub؟ (تفاصيل + صور + نسخة). راح تنحفظ كمسودات للمراجعة قبل النشر.`)) return;
+    $("#impSel").disabled = true;
+    let ok = 0;
+    for (let i = 0; i < sel.length; i++) {
+      $("#impSel").innerHTML = `… جاري ${i + 1}/${sel.length}`;
+      try { await api("/admin/github-import", { method: "POST", body: { repo: sel[i], siteUrl: location.origin } }); ok++; } catch (er) { toast(sel[i] + ": " + er.message, true); }
+    }
+    toast(`تم استيراد ${ok} من ${sel.length} ✔ — راجعهن واضغط نشر`, false);
+    await refresh(); drawApps();
+  };
 }
 
 // مستودع التطبيق: المحفوظ أو من الخريطة

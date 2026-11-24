@@ -794,6 +794,28 @@ export default async (req, context) => {
         return json({ ok: true, version: a.version });
       }
 
+      // اكتشاف مستودعات GitHub غير المنشورة بعد
+      if (path === "/admin/github-discover" && m === "GET") {
+        const token = process.env.GITHUB_TOKEN, ghrepo = process.env.GITHUB_REPO;
+        const owner = (ghrepo || "").split("/")[0];
+        if (!owner) return err("لازم تضيف GITHUB_REPO بإعدادات Netlify (owner/repo)");
+        let repos = [];
+        for (let p = 1; p <= 3; p++) {
+          const page = await ghJSON(`https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&page=${p}`, token);
+          if (!Array.isArray(page) || !page.length) break;
+          repos = repos.concat(page);
+          if (page.length < 100) break;
+        }
+        if (!repos.length) return err("تعذّر جلب المستودعات — تأكد من GITHUB_REPO", 502);
+        const apps = await loadApps();
+        const used = new Set(apps.map((a) => (a.github || "").toLowerCase()).filter(Boolean));
+        const skip = new Set([(ghrepo || "").toLowerCase()]);
+        const list = repos
+          .filter((r) => !r.fork && !r.archived && !used.has(r.full_name.toLowerCase()) && !skip.has(r.full_name.toLowerCase()))
+          .map((r) => ({ repo: r.full_name, name: r.name, description: r.description || "", language: r.language || "", pushedAt: r.pushed_at }));
+        return json({ owner, count: list.length, repos: list });
+      }
+
       // جلب تطبيق جديد كامل من GitHub (اسم، شرح، نسخة، تحديثات، كلمات، أيقونة، صور) + رفع الملفات
       if (path === "/admin/github-import" && m === "POST") {
         const token = process.env.GITHUB_TOKEN, ghrepo = process.env.GITHUB_REPO;
