@@ -234,6 +234,18 @@ function guessCats(a) {
 
 const TABS = { apps: [I.grid, "التطبيقات"], distribute: [I.folder, "توزيع الأقسام"], news: [I.fire, "الأخبار التقنية"], requests: [I.chat, "الطلبات"], reports: [I.warn, "بلاغات الروابط"], settings: [I.gear, "إعدادات الموقع"], backup: [I.cloud, "نسخة احتياطية"] };
 const NEWS_CATS = ["الذكاء الاصطناعي", "البرامج والتطبيقات", "الهواتف", "الأمن السيبراني", "الحواسيب والأجهزة", "الإنترنت والشبكات", "الألعاب", "عام تقني"];
+// مستودعات GitHub للتطبيقات المنشورة — تتعبّى تلقائياً بخانة التعديل حتى ما تحتاج تجيبها يدوي
+const GH_REPOS = {
+  "ibra-download-manager": "ibrata2/ibdm-pro",
+  "ibratv": "ibrata2/Ibratv",
+  "ibmc": "ibrata2/ibra-adawat",
+  "ibra-vpn": "ibrata2/IBRA-VPN",
+  "ibra-player": "ibrata2/ibra-player",
+  "ibra-crom": "ibrata2/IBRACROM",
+  "ibra-world-tour": "ibrata2/ibra-world-tour",
+  "ibra-drive": "ibrata2/ibra-drive",
+  "ibra-rescue": "ibrata2/ibra-rescue",
+};
 $$(".side .tab").forEach((b) => (b.innerHTML = `${TABS[b.dataset.t][0]}<span>${TABS[b.dataset.t][1]}</span>${b.dataset.t === "requests" ? '<span class="count" id="newCount" hidden></span>' : b.dataset.t === "reports" ? '<span class="count" id="repCount" hidden style="background:var(--bad);color:#fff"></span>' : ""}`));
 $$(".side .tab").forEach((b) => (b.onclick = () => openTab(b.dataset.t)));
 
@@ -395,7 +407,7 @@ function editApp(app) {
       <div class="field full"><label>المتطلبات</label><input class="input" id="f_requirements" value="${esc(a.requirements || "")}" placeholder="ويندوز 10 أو أحدث، 4GB رام"></div>
       <div class="field full"><label>مستودع GitHub (للتحديث التلقائي)</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input class="input" id="f_github" dir="ltr" value="${esc(a.github || "")}" placeholder="ibrata2/ibra-lens" style="flex:1;min-width:200px">
+          <input class="input" id="f_github" dir="ltr" value="${esc(a.github || GH_REPOS[a.slug] || "")}" placeholder="ibrata2/ibra-lens" style="flex:1;min-width:200px">
           <button class="btn sm gold" id="ghUpdate" type="button">${I.cloud} تحديث من GitHub</button>
         </div>
         <div class="hint">يجيب آخر إصدار (Release)، يرفع ملفاته على المواقع، ويحدّث رقم النسخة والتحديثات تلقائياً. رابط GitHub ما يظهر للزوار.</div>
@@ -716,7 +728,7 @@ function editApp(app) {
   $("#ghUpdate") && ($("#ghUpdate").onclick = async () => {
     const repo = $("#f_github").value.trim();
     if (!repo) return toast("اكتب اسم مستودع GitHub أولاً (مثال: ibrata2/ibra-lens)", true);
-    if (dirty || !a.id) { await save(); return toast("انحفظ — اضغط «تحديث من GitHub» مرة ثانية", false); }
+    if (dirty || !a.id || (a.github || "") !== repo) { await save(); return toast("انحفظ رابط GitHub — اضغط «تحديث من GitHub» مرة ثانية", false); }
     if (!confirm("جلب آخر إصدار من GitHub ورفعه على المواقع وتحديث النسخة والتحديثات تلقائياً؟")) return;
     $("#ghUpdate").disabled = true;
     try {
