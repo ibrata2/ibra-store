@@ -172,6 +172,49 @@ function normalizeNA(input, old = {}) {
 const slugify = (s) =>
   clean(s, 80).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "") || uid(6);
 
+/* ---------- جلب تطبيق جديد من GitHub (استيراد كامل) ---------- */
+const GH_API = (token) => ({ authorization: token ? "Bearer " + token : undefined, accept: "application/vnd.github+json", "user-agent": "ibra-store" });
+async function ghJSON(url, token) {
+  try { const r = await fetch(url, { headers: GH_API(token) }); if (!r.ok) return null; return await r.json(); } catch { return null; }
+}
+async function fetchBytes(u) {
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), 7000);
+  try { const r = await fetch(u, { headers: { "user-agent": "ibra-store" }, signal: c.signal }); clearTimeout(t); if (!r.ok) return null; return { buf: Buffer.from(await r.arrayBuffer()), ct: (r.headers.get("content-type") || "").split(";")[0].trim() }; }
+  catch { clearTimeout(t); return null; }
+}
+async function storeImageFrom(u) {
+  const r = await fetchBytes(u); if (!r) return "";
+  let type = r.ct;
+  if (!/^image\//.test(type)) {
+    const ext = (u.split("?")[0].match(/\.(png|jpe?g|webp|gif|svg)$/i) || [])[1]; if (!ext) return "";
+    const e = ext.toLowerCase(); type = "image/" + (e === "jpg" ? "jpeg" : e === "svg" ? "svg+xml" : e);
+  }
+  if (r.buf.length > 5 * 1024 * 1024 || r.buf.length < 200) return "";
+  const key = uid(14);
+  await store("media").set(key, r.buf, { metadata: { type, name: "github", at: now() } });
+  return "/api/media/" + key;
+}
+function readmeImages(md, repo, branch) {
+  const urls = []; let m;
+  const re1 = /!\[[^\]]*\]\(([^)\s]+)/g; while ((m = re1.exec(md))) urls.push(m[1]);
+  const re2 = /<img[^>]+src=["']([^"']+)["']/gi; while ((m = re2.exec(md))) urls.push(m[1]);
+  return [...new Set(urls)]
+    .map((u) => /^https?:\/\//.test(u) ? u : `https://raw.githubusercontent.com/${repo}/${branch}/${u.replace(/^\.?\//, "")}`)
+    .filter((u) => !/shields\.io|badge|\/badges?\/|\.svg(\?|#|$)/i.test(u));
+}
+function guessAppCat(text) {
+  const t = (text || "").toLowerCase();
+  if (/(game|لعبة|العاب|ألعاب|platformer|rpg)/.test(t)) return "الألعاب";
+  if (/(download|downloader|idm|تحميل|محمل)/.test(t)) return "الإنترنت والتحميل";
+  if (/(vpn|proxy|في بي ان|بروكسي|حجب)/.test(t)) return "الأمن والحماية";
+  if (/(player|مشغل|media|ميديا|video|audio|موسيقى)/.test(t)) return "برامج الوسائط";
+  if (/(convert|محول|محوّل|converter|pdf)/.test(t)) return "المحوّلات والأدوات";
+  if (/(browser|متصفح|chrome|chromium)/.test(t)) return "المتصفحات";
+  if (/(tv|تلفزيون|iptv|قنوات)/.test(t)) return "تطبيقات التلفزيون";
+  if (/(clean|صيانة|optimizer|منظف|system)/.test(t)) return "أدوات النظام";
+  return "";
+}
+
 function normalizeApp(input, old = {}) {
   const platforms = {};
   for (const p of PLATFORMS) {
@@ -720,6 +763,64 @@ export default async (req, context) => {
         a.updatedAt = now();
         await saveApps(apps);
         return json({ ok: true, version: a.version });
+      }
+
+      // جلب تطبيق جديد كامل من GitHub (اسم، شرح، نسخة، تحديثات، كلمات، أيقونة، صور) + رفع الملفات
+      if (path === "/admin/github-import" && m === "POST") {
+        const token = process.env.GITHUB_TOKEN, ghrepo = process.env.GITHUB_REPO;
+        const repo = clean(body.repo, 120).replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, "");
+        if (!/^[^/]+\/[^/]+$/.test(repo)) return err("اكتب اسم المستودع بصيغة owner/repo");
+        const info = await ghJSON(`https://api.github.com/repos/${repo}`, token);
+        if (!info) return err("ما لگيت المستودع — تأكد من الاسم (وإذا خاص أضف GH_PAT)", 404);
+        const branch = info.default_branch || "main";
+        const rel = await ghJSON(`https://api.github.com/repos/${repo}/releases/latest`, token);
+        const readme = await ghJSON(`https://api.github.com/repos/${repo}/readme`, token);
+        const readmeMd = readme && readme.content ? Buffer.from(readme.content, "base64").toString("utf8") : "";
+
+        // الأيقونة: جرّب مسارات شائعة ثم صورة المالك
+        let icon = "";
+        const iconPaths = ["build/icon.png", "icon.png", "assets/icon.png", "public/icon.png", "public/favicon.png", "resources/icon.png", "src-tauri/icons/128x128.png", "assets/logo.png", "logo.png"];
+        for (const p of iconPaths) { icon = await storeImageFrom(`https://raw.githubusercontent.com/${repo}/${branch}/${p}`); if (icon) break; }
+        if (!icon && info.owner?.avatar_url) icon = await storeImageFrom(info.owner.avatar_url);
+
+        // صور من README (حتى 5، نتخطى اللي صارت أيقونة)
+        const shots = [];
+        for (const u of readmeImages(readmeMd, repo, branch).slice(0, 7)) {
+          if (shots.length >= 5) break;
+          const s = await storeImageFrom(u); if (s) shots.push(s);
+        }
+
+        const name = clean(info.name, 120).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+        const version = rel ? clean(rel.tag_name || rel.name, 40).replace(/^v/i, "") : "";
+        const keywords = [...new Set([...(Array.isArray(info.topics) ? info.topics : []), "ابراهيم الخزرجي"])].map((k) => clean(k, 50)).filter(Boolean).slice(0, 20);
+        const cat = guessAppCat(name + " " + (info.description || "") + " " + keywords.join(" "));
+
+        const apps = await loadApps();
+        const draft = normalizeApp({
+          name: name || repo.split("/")[1],
+          tagline: clean(info.description, 200),
+          description: clean(info.description, 20000),
+          version, changelog: rel ? clean(rel.body, 6000) : "",
+          github: repo, keywords,
+          categories: cat ? [cat] : [],
+          icon, cover: shots[0] || "", screenshots: shots,
+          platformNotes: { android: "هذي النسخة تشتغل على كل أجهزة الأندرويد — الأجهزة البسيطة والقوية، متوافقة مع الاثنين." },
+          published: false, // مسودة حتى يراجعها ويضغط نشر
+        });
+        while (apps.some((x) => x.slug === draft.slug)) draft.slug += "-" + uid(3).toLowerCase();
+        apps.push(draft);
+        await saveApps(apps);
+
+        // رفع ملفات آخر إصدار تلقائياً إذا أمكن
+        let mirror = false;
+        if (token && ghrepo && rel) {
+          const rr = await fetch(`https://api.github.com/repos/${ghrepo}/actions/workflows/github-update.yml/dispatches`, {
+            method: "POST", headers: { authorization: "Bearer " + token, accept: "application/vnd.github+json", "user-agent": "ibra-store", "content-type": "application/json" },
+            body: JSON.stringify({ ref: process.env.GITHUB_BRANCH || "main", inputs: { app_id: draft.id, source_repo: repo, hosts: "gofile,buzzheavier", site_url: clean(body.siteUrl, 300) || url.origin } }),
+          });
+          mirror = rr.status === 204;
+        }
+        return json({ ok: true, app: draft, mirror, hasRelease: !!rel, icon: !!icon, shots: shots.length });
       }
 
       // تشغيل الرفع من رابط GitHub عبر GitHub Actions
