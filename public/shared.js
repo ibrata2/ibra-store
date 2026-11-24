@@ -214,33 +214,40 @@ const IB = (() => {
   }
 
   // ===== مشاركة المنشور =====
-  function shareBar(url, title) {
-    return `<div class="sharebar" data-url="${esc(url)}" data-title="${esc(title)}">
+  function shareBar(url, title, desc) {
+    return `<div class="sharebar" data-url="${esc(url)}" data-title="${esc(title)}" data-desc="${esc(desc || "")}">
       <span class="sh-lbl">${icons.share} مشاركة المنشور:</span>
       <button data-sh="native" class="sh-btn">مشاركة (ستوري / رسالة / تطبيقات)</button>
       <button data-sh="whatsapp" class="sh-btn" title="واتساب">${icons.whatsapp}</button>
       <button data-sh="telegram" class="sh-btn" title="تيليكرام">${icons.telegram}</button>
       <button data-sh="facebook" class="sh-btn" title="فيسبوك">${icons.facebook}</button>
       <button data-sh="x" class="sh-btn" title="X">${icons.xcom}</button>
-      <button data-sh="copy" class="sh-btn">${icons.copy} نسخ رابط المنشور</button>
+      <button data-sh="copy" class="sh-btn">${icons.copy} نسخ المنشور + الرابط</button>
     </div>`;
   }
-  function doShare(kind, url, title) {
-    const u = encodeURIComponent(url), t = encodeURIComponent(title || "");
+  // نص المشاركة = العنوان + الشرح المختصر + الرابط
+  function shareMsg(title, desc, url) {
+    const head = [title, desc].filter(Boolean).join("\n");
+    return (head ? head + "\n" : "") + url;
+  }
+  function doShare(kind, url, title, desc) {
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent([title, desc].filter(Boolean).join(" — "));
+    const full = encodeURIComponent(shareMsg(title, desc, url));
     const map = {
-      whatsapp: `https://wa.me/?text=${t}%20${u}`,
+      whatsapp: `https://wa.me/?text=${full}`,
       telegram: `https://t.me/share/url?url=${u}&text=${t}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}`,
       x: `https://twitter.com/intent/tweet?url=${u}&text=${t}`,
     };
-    if (kind === "copy") return copy(url);
-    if (kind === "native") { if (navigator.share) { navigator.share({ title, url }).catch(() => {}); return; } return copy(url); }
+    if (kind === "copy") return copy(shareMsg(title, desc, url));
+    if (kind === "native") { if (navigator.share) { navigator.share({ title: title || "", text: [title, desc].filter(Boolean).join(" — "), url }).catch(() => {}); return; } return copy(shareMsg(title, desc, url)); }
     window.open(map[kind], "_blank", "noopener");
   }
   function wireShare(root) {
     (root || document).querySelectorAll(".sharebar").forEach((bar) => {
       if (bar._wired) return; bar._wired = 1;
-      bar.addEventListener("click", (e) => { const b = e.target.closest("[data-sh]"); if (!b) return; doShare(b.dataset.sh, bar.dataset.url, bar.dataset.title); });
+      bar.addEventListener("click", (e) => { const b = e.target.closest("[data-sh]"); if (!b) return; doShare(b.dataset.sh, bar.dataset.url, bar.dataset.title, bar.dataset.desc); });
     });
   }
 

@@ -792,7 +792,7 @@ async function renderApp(slug) {
         ${(a.versions || []).slice(0, 3).map((v) => `<div class="vitem"><div class="vhead"><span class="chip">النسخة ${esc(v.version)}</span>${v.date ? `<span class="vtag">${fmtDate(v.date)}</span>` : ""}</div>${v.changelog ? `<div class="desc">${renderDesc(v.changelog)}</div>` : ""}</div>`).join("")}
       </div>` : ""}
       ${a.keywords?.length ? `<div class="box glass fade"><h2>كلمات مفتاحية</h2><div class="kw">${a.keywords.map((k) => `<a href="/" data-kw="${esc(k)}">#${esc(k)}</a>`).join("")}</div></div>` : ""}
-      <div class="box glass fade">${shareBar(pageUrl, a.name)}</div>
+      <div class="box glass fade">${shareBar(pageUrl, a.name, a.tagline || (a.description || "").slice(0, 160))}</div>
     </div>
 
     <aside class="side">
@@ -1069,7 +1069,7 @@ async function renderArticle(slug) {
     <h1>${esc(n.title)}</h1>
     <div class="art-body desc">${renderDesc(n.body || n.excerpt || "")}</div>
     ${n.sourceUrl ? `<a class="btn" href="${esc(n.sourceUrl)}" target="_blank" rel="noopener nofollow">${I.link} الخبر الأصلي من ${esc(n.source || "المصدر")}</a>` : ""}
-    ${shareBar(url, n.title)}
+    ${shareBar(url, n.title, n.excerpt || (n.body || "").slice(0, 160))}
   </article>
   ${related.length ? `<section class="section"><div class="sec-head"><h2>${I.fire} أخبار ذات صلة</h2></div>
     <div class="news-grid">${related.map((r) => `<article class="ncard glass" data-news="${esc(r.slug)}"><div class="nimg" style="background-image:url('${esc(r.image || "")}')">${r.image ? "" : I.fire}</div><div class="nbody"><div class="nmeta"><span class="chip gold">${esc(r.category)}</span><span class="nago">${fmtAgo(r.createdAt)}</span></div><h3>${esc(r.title)}</h3></div></article>`).join("")}</div></section>` : ""}`;
