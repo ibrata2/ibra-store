@@ -156,7 +156,9 @@ const IB = (() => {
       return `<iframe src="https://drive.google.com/file/d/${m[1]}/preview" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe>`;
     if ((m = url.match(/tiktok\.com\/.*video\/(\d+)/)))
       return `<iframe src="https://www.tiktok.com/embed/v2/${m[1]}" allowfullscreen loading="lazy" style="aspect-ratio:9/16;max-height:640px"></iframe>`;
-    return `<video src="${esc(url)}" controls preload="metadata" playsinline></video>`;
+    // ملف فيديو مباشر فقط — الروابط اللي مو فيديو (گوفايل، ميديافاير، صفحات) ما تنعرض
+    if (/\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(url)) return `<video src="${esc(url)}" controls preload="metadata" playsinline></video>`;
+    return "";
   }
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
