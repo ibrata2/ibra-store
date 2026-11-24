@@ -165,6 +165,10 @@ body.is-home #layWrap{display:block}
 .tk-track{animation:tkscroll 40s linear infinite}
 .ticker:hover .tk-track{animation-play-state:paused}
 @keyframes tkscroll{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.vitem{padding:12px 0;border-top:1px solid var(--line2)}.vitem:first-child{border-top:none;padding-top:0}
+.vhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.vtag{font-size:.8rem;color:var(--muted)}
+.vnow .vtag{color:var(--gold3);font-weight:700}
 .tk-item{color:var(--text);font-weight:600;font-size:.9rem;cursor:pointer}
 .tk-item:hover{color:var(--gold3)}
 .tk-item .tk-name{font-weight:800}
@@ -783,7 +787,10 @@ async function renderApp(slug) {
       ${shots.length ? `<div class="box glass fade"><h2>صور من البرنامج</h2><div class="shots">${shots.map((s, i) => `<img src="${esc(s)}" data-i="${i}" alt="صورة ${i + 1} من ${esc(a.name)}" loading="lazy">`).join("")}</div></div>` : ""}
       <div class="box glass fade"><h2>عن البرنامج</h2><div class="desc">${renderDesc(a.description || "")}</div></div>
       ${a.features?.length ? `<div class="box glass fade"><h2>المميزات</h2><div class="features">${a.features.map((f) => `<div>${I.check}<span>${esc(f)}</span></div>`).join("")}</div></div>` : ""}
-      ${a.changelog ? `<div class="box glass fade"><h2>ما الجديد</h2><div class="desc">${renderDesc(a.changelog)}</div></div>` : ""}
+      ${(a.changelog || (a.versions && a.versions.length)) ? `<div class="box glass fade"><h2>التحديثات وسجل النسخ</h2>
+        ${a.changelog || a.version ? `<div class="vitem vnow"><div class="vhead"><span class="chip gold">${a.version ? "النسخة " + esc(a.version) : "الأحدث"}</span><span class="vtag">الأحدث</span></div>${a.changelog ? `<div class="desc">${renderDesc(a.changelog)}</div>` : ""}</div>` : ""}
+        ${(a.versions || []).slice(0, 3).map((v) => `<div class="vitem"><div class="vhead"><span class="chip">النسخة ${esc(v.version)}</span>${v.date ? `<span class="vtag">${fmtDate(v.date)}</span>` : ""}</div>${v.changelog ? `<div class="desc">${renderDesc(v.changelog)}</div>` : ""}</div>`).join("")}
+      </div>` : ""}
       ${a.keywords?.length ? `<div class="box glass fade"><h2>كلمات مفتاحية</h2><div class="kw">${a.keywords.map((k) => `<a href="/" data-kw="${esc(k)}">#${esc(k)}</a>`).join("")}</div></div>` : ""}
       <div class="box glass fade">${shareBar(pageUrl, a.name)}</div>
     </div>

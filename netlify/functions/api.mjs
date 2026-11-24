@@ -205,6 +205,11 @@ function normalizeApp(input, old = {}) {
     category: categories[0] || "",
     categories,
     version: clean(input.version, 40),
+    github: clean(input.github, 120).replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, ""),
+    versions: (Array.isArray(input.versions) ? input.versions : (Array.isArray(old.versions) ? old.versions : []))
+      .map((v) => ({ version: clean(v.version, 40), date: clean(v.date, 40) || now(), changelog: clean(v.changelog, 6000) }))
+      .filter((v) => v.version)
+      .slice(0, 100),
     size: clean(input.size, 40),
     language: clean(input.language, 60),
     requirements: clean(input.requirements, 600),
@@ -628,7 +633,12 @@ export default async (req, context) => {
         if (i < 0) return err("غير موجود", 404);
         if (m === "PUT") {
           if (!clean(body.name)) return err("اكتب اسم التطبيق");
-          const a = normalizeApp(body, apps[i]);
+          const prev = apps[i];
+          const a = normalizeApp(body, prev);
+          // سجل النسخ: إذا تغيّر رقم النسخة يدوياً، ادفع القديمة للسجل
+          if (a.version && prev.version && a.version !== prev.version && !(a.versions || []).some((v) => v.version === prev.version)) {
+            a.versions = [{ version: prev.version, date: prev.updatedAt || now(), changelog: prev.changelog || "" }, ...(a.versions || [])].slice(0, 100);
+          }
           while (apps.some((x, j) => j !== i && x.slug === a.slug)) a.slug += "-" + uid(3).toLowerCase();
           apps[i] = a;
           await saveApps(apps);
@@ -662,6 +672,54 @@ export default async (req, context) => {
         a.updatedAt = now();
         await saveApps(apps);
         return json({ ok: true, added: incoming.length });
+      }
+
+      // تحديث تلقائي: جلب آخر إصدار من GitHub ورفعه على المواقع وتحديث النسخة والتحديثات
+      if ((mm = path.match(/^\/admin\/apps\/([^/]+)\/github-update$/)) && m === "POST") {
+        const token = process.env.GITHUB_TOKEN, repo = process.env.GITHUB_REPO;
+        if (!token || !repo) return err("لازم تضيف GITHUB_TOKEN و GITHUB_REPO بإعدادات Netlify (شوف ملف الشرح)");
+        const apps = await loadApps();
+        const a = apps.find((x) => x.id === mm[1]);
+        if (!a) return err("احفظ التطبيق أولاً");
+        if (!a.github) return err("اكتب اسم مستودع GitHub للتطبيق أولاً (مثال: ibrata2/ibra-lens)");
+        const hosts = (Array.isArray(body.hosts) && body.hosts.length ? body.hosts : ["gofile", "buzzheavier"]).filter((h) => ["gdrive", "gofile", "catbox", "pixeldrain", "buzzheavier"].includes(h));
+        if (!hosts.length) return err("اختار موقع رفع واحد على الأقل");
+        const site = clean(body.siteUrl, 300) || url.origin;
+        const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/github-update.yml/dispatches`, {
+          method: "POST",
+          headers: { authorization: "Bearer " + token, accept: "application/vnd.github+json", "user-agent": "ibra-store", "content-type": "application/json" },
+          body: JSON.stringify({ ref: process.env.GITHUB_BRANCH || "main", inputs: { app_id: a.id, source_repo: a.github, hosts: hosts.join(","), site_url: site } }),
+        });
+        if (r.status !== 204) return err("GitHub رفض الطلب: " + r.status + " " + (await r.text()).slice(0, 300), 502);
+        return json({ ok: true, actions: `https://github.com/${repo}/actions/workflows/github-update.yml` });
+      }
+
+      // استقبال نتيجة التحديث من الـ workflow: رقم النسخة + التحديثات + الروابط لكل منصة
+      if ((mm = path.match(/^\/admin\/apps\/([^/]+)\/github-apply$/)) && m === "POST") {
+        const apps = await loadApps();
+        const a = apps.find((x) => x.id === mm[1]);
+        if (!a) return err("غير موجود", 404);
+        const newVer = clean(body.version, 40), newLog = clean(body.changelog, 6000);
+        if (newVer && newVer !== a.version) {
+          if (a.version && !(a.versions || []).some((v) => v.version === a.version))
+            a.versions = [{ version: a.version, date: a.updatedAt || now(), changelog: a.changelog || "" }, ...(a.versions || [])].slice(0, 100);
+          a.version = newVer;
+        }
+        if (newLog) a.changelog = newLog;
+        const plats = body.platforms && typeof body.platforms === "object" ? body.platforms : {};
+        a.platforms = a.platforms || {};
+        for (const p of Object.keys(plats)) {
+          if (!PLATFORMS.includes(p)) continue;
+          const incoming = (Array.isArray(plats[p]) ? plats[p] : [])
+            .map((l) => ({ id: uid(8), host: clean(l.host, 40), label: clean(l.label, 60), url: clean(l.url, 2000), note: clean(l.note, 120) }))
+            .filter((l) => /^https?:\/\//i.test(l.url));
+          if (incoming.length) a.platforms[p] = incoming; // روابط جديدة تستبدل القديمة لنفس المنصة
+        }
+        if (body.size) a.size = clean(body.size, 40);
+        a.mirrorLog = [{ at: now(), platform: "github", version: newVer, ok: 1, errors: clean(body.errors, 1000) }, ...(a.mirrorLog || [])].slice(0, 10);
+        a.updatedAt = now();
+        await saveApps(apps);
+        return json({ ok: true, version: a.version });
       }
 
       // تشغيل الرفع من رابط GitHub عبر GitHub Actions

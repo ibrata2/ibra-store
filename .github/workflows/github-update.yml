@@ -1,0 +1,102 @@
+# IBRA STORE — تحديث تلقائي: يجلب آخر إصدار (Release) من مستودع التطبيق،
+# يرفع ملفاته على مواقع الرفع، ويحدّث رقم النسخة والتحديثات والروابط بالموقع.
+# يُشغَّل من لوحة الإدارة (زر "تحديث من GitHub"). رابط GitHub ما يظهر للزوار.
+name: github-update
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_id:      { description: "معرّف التطبيق بالموقع", required: true }
+      source_repo: { description: "مستودع التطبيق (owner/repo)", required: true }
+      hosts:       { description: "مواقع الرفع", required: true, default: "gofile,buzzheavier" }
+      site_url:    { description: "رابط الموقع", required: true }
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: جلب آخر إصدار من GitHub ورفعه على المواقع
+        env:
+          SRC: ${{ inputs.source_repo }}
+          HOSTS: ${{ inputs.hosts }}
+          SITE: ${{ inputs.site_url }}
+          APP: ${{ inputs.app_id }}
+          GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          ADMIN_KEY: ${{ secrets.ADMIN_PASSWORD }}
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG }}
+          PIXELDRAIN_KEY: ${{ secrets.PIXELDRAIN_KEY }}
+          GDRIVE_FOLDER: ${{ vars.GDRIVE_FOLDER || 'IBRA-STORE' }}
+        run: |
+          set -e
+          AUTH="Authorization: Bearer $GH_TOKEN"
+          API="https://api.github.com/repos/$SRC/releases/latest"
+          REL=$(curl -s -H "$AUTH" -H "Accept: application/vnd.github+json" "$API")
+          VER=$(echo "$REL" | jq -r '.tag_name // .name // empty')
+          BODY=$(echo "$REL" | jq -r '.body // ""')
+          if [ -z "$VER" ]; then echo "ماكو إصدار (Release) بالمستودع $SRC"; echo "$REL" | head -c 400; exit 1; fi
+          echo "الإصدار: $VER"
+
+          # تثبيت rclone إذا مطلوب
+          if [[ ",$HOSTS," == *",gdrive,"* ]]; then curl -fsSL https://rclone.org/install.sh | sudo bash || true; fi
+
+          # دالة رفع ملف واحد على كل المواقع، تطبع JSON للروابط
+          upload_file() {
+            local F="$1"; local NM="$2"; local OUT="[]"
+            add() { OUT=$(echo "$OUT" | jq --arg h "$1" --arg l "$2" --arg u "$3" '. += [{host:$h,label:$l,url:$u}]'); echo "  ✔ $2: $3" >&2; }
+            if [[ ",$HOSTS," == *",gofile,"* ]]; then
+              R=$(curl -s -F "file=@$F" https://upload.gofile.io/uploadfile); U=$(echo "$R" | jq -r '.data.downloadPage // empty')
+              [ -n "$U" ] && add gofile "Gofile" "$U" || echo "  ✘ gofile" >&2
+            fi
+            if [[ ",$HOSTS," == *",buzzheavier,"* ]]; then
+              ENC=$(python3 -c "import sys,urllib.parse as u;print(u.quote(sys.argv[1]))" "$NM")
+              R=$(curl -s -T "$F" "https://w.buzzheavier.com/$ENC"); ID=$(echo "$R" | jq -r '.data.id // .id // empty' 2>/dev/null)
+              [ -n "$ID" ] && add buzzheavier "BuzzHeavier" "https://buzzheavier.com/$ID" || echo "  ✘ buzzheavier" >&2
+            fi
+            if [[ ",$HOSTS," == *",catbox,"* ]]; then
+              U=$(curl -s -F "reqtype=fileupload" -F "fileToUpload=@$F" https://catbox.moe/user/api.php)
+              [[ "$U" == https://* ]] && add catbox "Catbox" "$U" || echo "  ✘ catbox" >&2
+            fi
+            if [[ ",$HOSTS," == *",pixeldrain,"* && -n "$PIXELDRAIN_KEY" ]]; then
+              ENC=$(python3 -c "import sys,urllib.parse as u;print(u.quote(sys.argv[1]))" "$NM")
+              R=$(curl -s -T "$F" -u ":$PIXELDRAIN_KEY" "https://pixeldrain.com/api/file/$ENC"); ID=$(echo "$R" | jq -r '.id // empty')
+              [ -n "$ID" ] && add pixeldrain "Pixeldrain" "https://pixeldrain.com/u/$ID" || echo "  ✘ pixeldrain" >&2
+            fi
+            if [[ ",$HOSTS," == *",gdrive,"* && -n "$RCLONE_CONFIG_B64" ]]; then
+              mkdir -p ~/.config/rclone; echo "$RCLONE_CONFIG_B64" | base64 -d > ~/.config/rclone/rclone.conf 2>/dev/null || echo "$RCLONE_CONFIG_B64" > ~/.config/rclone/rclone.conf
+              REMOTE=$(rclone listremotes | head -n1)
+              if rclone copy "$F" "${REMOTE}${GDRIVE_FOLDER}" && U=$(rclone link "${REMOTE}${GDRIVE_FOLDER}/$NM"); then add gdrive "Google Drive" "$U"; else echo "  ✘ gdrive" >&2; fi
+            fi
+            echo "$OUT"
+          }
+
+          # تصنيف المنصة حسب امتداد الملف
+          platform_of() {
+            case "${1,,}" in
+              *.exe|*.msi) echo windows;; *.apk|*.aab|*.xapk) echo android;; *.ipa) echo ios;;
+              *.dmg|*.pkg) echo mac;; *.appimage|*.deb|*.rpm) echo linux;; *.zip) echo windows;; *) echo "";;
+            esac
+          }
+
+          PLATFORMS_JSON="{}"; SIZE=""; ERRS=""
+          COUNT=$(echo "$REL" | jq '.assets | length')
+          if [ "$COUNT" = "0" ]; then echo "ماكو ملفات مرفقة بالإصدار"; ERRS="no-assets"; fi
+          for i in $(seq 0 $((COUNT-1))); do
+            URL=$(echo "$REL" | jq -r ".assets[$i].browser_download_url")
+            NM=$(echo "$REL" | jq -r ".assets[$i].name")
+            P=$(platform_of "$NM")
+            if [ -z "$P" ]; then echo "تخطّي $NM (امتداد غير معروف)"; continue; fi
+            echo "تنزيل $NM → $P"
+            mkdir -p dl; curl -fL --retry 3 -H "$AUTH" -o "dl/$NM" "$URL"
+            [ -z "$SIZE" ] && SIZE=$(du -h "dl/$NM" | cut -f1)
+            LINKS=$(upload_file "dl/$NM" "$NM")
+            PLATFORMS_JSON=$(echo "$PLATFORMS_JSON" | jq --arg p "$P" --argjson l "$LINKS" '.[$p] = ((.[$p] // []) + $l)')
+            rm -f "dl/$NM"
+          done
+
+          PAYLOAD=$(jq -n --arg v "$VER" --arg c "$BODY" --arg s "$SIZE" --arg e "$ERRS" --argjson p "$PLATFORMS_JSON" \
+            '{version:$v, changelog:$c, size:$s, errors:$e, platforms:$p}')
+          echo "$PAYLOAD" | jq '.platforms |= keys'
+          curl -fsS -X POST "$SITE/api/admin/apps/$APP/github-apply" \
+            -H "content-type: application/json" -H "x-admin-key: $ADMIN_KEY" -d "$PAYLOAD"
+          echo "تم إرسال التحديث للموقع ✔"

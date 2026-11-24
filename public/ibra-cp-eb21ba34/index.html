@@ -135,6 +135,10 @@ body{display:block}
 .switch.sm i{width:40px;height:22px}.switch.sm i::after{width:16px;height:16px}.switch.sm input:checked+i::after{right:21px}
 .feed-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--card2,rgba(255,255,255,.02))}
 .feed-row .f_url{flex:1;min-width:180px}
+.vhist{display:flex;flex-direction:column;gap:8px}
+.vrow{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card2,rgba(255,255,255,.02))}
+.vrow b{color:var(--gold3,var(--gold));margin-inline-end:8px}.vrow small{opacity:.6}
+.vlog{white-space:pre-wrap;font-size:.85rem;opacity:.85;margin-top:4px}
 
 .savebar{position:sticky;bottom:14px;z-index:30;display:flex;gap:10px;align-items:center;padding:12px 16px;margin-top:10px}
 .savebar .sp{flex:1}
@@ -389,7 +393,15 @@ function editApp(app) {
       <div class="field"><label>الحجم</label><input class="input" id="f_size" value="${esc(a.size || "")}" placeholder="85 MB"></div>
       <div class="field"><label>اللغة</label><input class="input" id="f_language" value="${esc(a.language || "")}" placeholder="عربي / إنكليزي"></div>
       <div class="field full"><label>المتطلبات</label><input class="input" id="f_requirements" value="${esc(a.requirements || "")}" placeholder="ويندوز 10 أو أحدث، 4GB رام"></div>
+      <div class="field full"><label>مستودع GitHub (للتحديث التلقائي)</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input class="input" id="f_github" dir="ltr" value="${esc(a.github || "")}" placeholder="ibrata2/ibra-lens" style="flex:1;min-width:200px">
+          <button class="btn sm gold" id="ghUpdate" type="button">${I.cloud} تحديث من GitHub</button>
+        </div>
+        <div class="hint">يجيب آخر إصدار (Release)، يرفع ملفاته على المواقع، ويحدّث رقم النسخة والتحديثات تلقائياً. رابط GitHub ما يظهر للزوار.</div>
+      </div>
       <div class="field full"><label>ما الجديد بهذا الإصدار</label><textarea class="input" id="f_changelog" style="min-height:80px">${esc(a.changelog || "")}</textarea></div>
+      ${(a.versions && a.versions.length) ? `<div class="field full"><label>سجل النسخ السابقة (محفوظ — ما ينمسح)</label><div class="vhist">${a.versions.map((v) => `<div class="vrow"><b>${esc(v.version)}</b><small>${v.date ? fmtDate(v.date) : ""}</small>${v.changelog ? `<div class="vlog">${esc(v.changelog)}</div>` : ""}</div>`).join("")}</div></div>` : ""}
       <div class="full" style="display:flex;gap:26px;flex-wrap:wrap">
         <label class="switch"><input type="checkbox" id="f_published" ${a.published !== false ? "checked" : ""}><i></i>منشور (يظهر بالموقع)</label>
         <label class="switch"><input type="checkbox" id="f_featured" ${a.featured ? "checked" : ""}><i></i>تطبيق مميز (يظهر بالأعلى)</label>
@@ -679,6 +691,7 @@ function editApp(app) {
       features: g("features").split("\n").map((x) => x.trim()).filter(Boolean),
       categories: a.categories, category: a.categories[0] || "", version: g("version"), size: g("size"), language: g("language"),
       requirements: g("requirements"), changelog: g("changelog"), video: g("video"),
+      github: g("github"), versions: a.versions || [],
       published: $("#f_published").checked, featured: $("#f_featured").checked, platforms,
     };
   };
@@ -700,6 +713,18 @@ function editApp(app) {
     $("#save") && ($("#save").disabled = false);
   };
   $("#save").onclick = save;
+  $("#ghUpdate") && ($("#ghUpdate").onclick = async () => {
+    const repo = $("#f_github").value.trim();
+    if (!repo) return toast("اكتب اسم مستودع GitHub أولاً (مثال: ibrata2/ibra-lens)", true);
+    if (dirty || !a.id) { await save(); return toast("انحفظ — اضغط «تحديث من GitHub» مرة ثانية", false); }
+    if (!confirm("جلب آخر إصدار من GitHub ورفعه على المواقع وتحديث النسخة والتحديثات تلقائياً؟")) return;
+    $("#ghUpdate").disabled = true;
+    try {
+      const r = await api("/admin/apps/" + a.id + "/github-update", { method: "POST", body: { hosts: ["gofile", "buzzheavier"], siteUrl: location.origin } });
+      toast("جاري الجلب والرفع… يستغرق دقيقة-دقيقتين، بعدها حدّث الصفحة", false);
+      setTimeout(async () => { try { const f = (await api("/admin/apps")).find((x) => x.id === a.id); if (f) editApp(f); } catch {} $("#ghUpdate") && ($("#ghUpdate").disabled = false); }, 90000);
+    } catch (er) { toast(er.message, true); $("#ghUpdate").disabled = false; }
+  });
   $("#postBtn") && ($("#postBtn").onclick = () => showPost(collect()));
   document.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && $("#save")) { e.preventDefault(); save(); } };
 }
