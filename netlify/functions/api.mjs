@@ -279,7 +279,7 @@ function normalizeApp(input, old = {}) {
     status: ["stable", "recommended", "new", "beta", "issues"].includes(input.status) ? input.status : "",
     github: clean(input.github, 120).replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, ""),
     versions: (Array.isArray(input.versions) ? input.versions : (Array.isArray(old.versions) ? old.versions : []))
-      .map((v) => ({ version: clean(v.version, 40), date: clean(v.date, 40) || now(), changelog: clean(v.changelog, 6000) }))
+      .map((v) => ({ version: clean(v.version, 40), date: clean(v.date, 40) || now(), changelog: clean(v.changelog, 6000), ...(v.platforms && typeof v.platforms === "object" ? { platforms: v.platforms } : {}) }))
       .filter((v) => v.version)
       .slice(0, 100),
     size: clean(input.size, 40),
@@ -437,6 +437,14 @@ export default async (req, context) => {
       for (const p of Object.keys(a.platforms || {})) {
         const f = a.platforms[p].find((l) => l.id === mm[2]);
         if (f) { link = f; break; }
+      }
+      // ابحث أيضاً بروابط النسخ القديمة حتى تبقى قابلة للتحميل
+      if (!link) for (const v of (a.versions || [])) {
+        for (const p of Object.keys(v.platforms || {})) {
+          const f = (v.platforms[p] || []).find((l) => l.id === mm[2]);
+          if (f) { link = f; break; }
+        }
+        if (link) break;
       }
       if (!link) return err("الرابط غير موجود", 404);
       a.downloads = (a.downloads || 0) + 1;
@@ -707,9 +715,9 @@ export default async (req, context) => {
           if (!clean(body.name)) return err("اكتب اسم التطبيق");
           const prev = apps[i];
           const a = normalizeApp(body, prev);
-          // سجل النسخ: إذا تغيّر رقم النسخة يدوياً، ادفع القديمة للسجل
+          // سجل النسخ: إذا تغيّر رقم النسخة يدوياً، ادفع القديمة للسجل مع روابطها
           if (a.version && prev.version && a.version !== prev.version && !(a.versions || []).some((v) => v.version === prev.version)) {
-            a.versions = [{ version: prev.version, date: prev.updatedAt || now(), changelog: prev.changelog || "" }, ...(a.versions || [])].slice(0, 100);
+            a.versions = [{ version: prev.version, date: prev.updatedAt || now(), changelog: prev.changelog || "", platforms: prev.platforms || {} }, ...(a.versions || [])].slice(0, 100);
           }
           while (apps.some((x, j) => j !== i && x.slug === a.slug)) a.slug += "-" + uid(3).toLowerCase();
           apps[i] = a;
@@ -774,7 +782,7 @@ export default async (req, context) => {
         const newVer = clean(body.version, 40), newLog = clean(body.changelog, 6000);
         if (newVer && newVer !== a.version) {
           if (a.version && !(a.versions || []).some((v) => v.version === a.version))
-            a.versions = [{ version: a.version, date: a.updatedAt || now(), changelog: a.changelog || "" }, ...(a.versions || [])].slice(0, 100);
+            a.versions = [{ version: a.version, date: a.updatedAt || now(), changelog: a.changelog || "", platforms: JSON.parse(JSON.stringify(a.platforms || {})) }, ...(a.versions || [])].slice(0, 100);
           a.version = newVer;
         }
         if (newLog) a.changelog = newLog;

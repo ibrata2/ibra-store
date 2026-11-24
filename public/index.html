@@ -179,6 +179,11 @@ body.is-home #layWrap{display:block}
 .dl-ver-item{border-top:1px solid var(--line2);padding-top:8px}
 .dl-ver-item .dvh{display:flex;align-items:center;gap:8px}.dl-ver-item .dvh b{color:var(--gold3)}.dl-ver-item .dvh small{color:var(--muted)}
 .dl-ver-item .dvlog{white-space:pre-wrap;font-size:.84rem;color:var(--dim);margin-top:3px}
+.dl-ver-item .dvdl{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.dl-ver-item .dvdl a{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;color:var(--gold3);border:1px solid var(--line2);border-radius:8px;padding:3px 9px;text-decoration:none}
+.dl-ver-item .dvdl a:hover{border-color:var(--gold);background:var(--glass-grad)}
+.dl-ver-item .dvdl svg{width:13px;height:13px}
+.dl-ver-item .dvno{font-size:.76rem;color:var(--dim);margin-top:5px;opacity:.7}
 .tk-item{color:var(--text);font-weight:600;font-size:.9rem;cursor:pointer}
 .tk-item:hover{color:var(--gold3)}
 .tk-item .tk-name{font-weight:800}
@@ -814,7 +819,7 @@ async function renderApp(slug) {
         ${a.version ? `<div class="dl-ver">
           <div class="dl-ver-now"><span>الإصدار الأحدث</span><b class="gold-text">v${esc(a.version)}</b></div>
           ${(a.versions && a.versions.length) ? `<button class="dl-ver-toggle" id="verToggle">إصدارات سابقة (${a.versions.length}) <span class="chev">▾</span></button>
-          <div class="dl-ver-list" id="verList" hidden>${a.versions.map((v) => `<div class="dl-ver-item"><div class="dvh"><b>v${esc(v.version)}</b>${v.date ? `<small>${fmtDate(v.date)}</small>` : ""}</div>${v.changelog ? `<div class="dvlog">${esc(v.changelog)}</div>` : ""}</div>`).join("")}</div>` : ""}
+          <div class="dl-ver-list" id="verList" hidden>${a.versions.map((v) => { const ls = Object.values(v.platforms || {}).flat(); return `<div class="dl-ver-item"><div class="dvh"><b>v${esc(v.version)}</b>${v.date ? `<small>${fmtDate(v.date)}</small>` : ""}</div>${v.changelog ? `<div class="dvlog">${esc(v.changelog)}</div>` : ""}${ls.length ? `<div class="dvdl">${ls.map((l) => `<a href="/api/go/${a.id}/${l.id}" target="_blank" rel="noopener nofollow">${I.download} ${esc(l.label || (HOSTS[l.host]?.name) || "تحميل")}</a>`).join("")}</div>` : '<div class="dvno">ماكو روابط محفوظة لهذي النسخة</div>'}</div>`; }).join("")}</div>` : ""}
         </div>` : ""}
         <h2>${I.download} روابط التحميل</h2>
         ${plats.length ? `
