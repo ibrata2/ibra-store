@@ -222,20 +222,26 @@ function mdToText(md) {
     .trim();
 }
 // أول جملة وصف حقيقية من README (نتخطى الكود والشارات والعناوين)
-function readmeTagline(md) {
-  const lines = mdToText(md).split("\n").map((l) => l.trim()).filter(Boolean);
+function readmeTagline(md, skip) {
+  const lines = mdToText(md).split("\n").map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean);
   for (const l of lines) {
-    if (l.length < 15) continue;
-    if (/^[-•*#>|=!]/.test(l)) continue;                                  // قوائم/عناوين/شارات
+    if (l.length < 20) continue;                                          // نتخطى العناوين القصيرة
+    if (skip && l === skip) continue;                                     // نتخطى سطر العنوان نفسه
+    if (/^[-•*#>|=!]/.test(l)) continue;                                  // قوائم/شارات
     if (/[{}<>`]|=>|::|\/\/|\bfunction\b|\bconst\b|\breturn\b|\bimport\b|https?:\/\//.test(l)) continue; // كود/روابط
     const letters = (l.match(/[\p{L}]/gu) || []).length;
     if (letters < l.length * 0.5) continue;                               // أغلبه رموز
-    return l.replace(/\s+/g, " ").slice(0, 200);
+    let s = l;
+    if (s.length > 140) { const cut = s.slice(0, 140); const b = Math.max(cut.lastIndexOf("—"), cut.lastIndexOf("،"), cut.lastIndexOf(".")); s = (b > 60 ? cut.slice(0, b) : cut).trim(); }
+    return s.slice(0, 200);
   }
   return "";
 }
-// H1 من README
-function readmeTitle(md) { const m = String(md || "").match(/^\s{0,3}#\s+(.+)/m); return m ? m[1].trim() : ""; }
+// العنوان من README: markdown # أو وسم <h1>
+function readmeTitle(md) {
+  let m = String(md || "").match(/^\s{0,3}#\s+(.+)/m); if (m) return m[1].trim();
+  m = String(md || "").match(/<h1[^>]*>([\s\S]*?)<\/h1>/i); return m ? stripHtml(m[1]) : "";
+}
 // مميزات من قسم "## المميزات" (نقاط -)
 function readmeFeatures(md) {
   const m = String(md || "").match(/##+\s*(?:المميزات|المزايا|Features)[^\n]*\n([\s\S]*?)(?:\n##\s|\n#\s|$)/i);
@@ -859,7 +865,7 @@ export default async (req, context) => {
 
         // النصوص: حقل الوصف إن وُجد، وإلا من README
         const name = readmeTitle(readmeMd) || clean(info.name, 120).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-        const tagline = clean(info.description, 200) || readmeTagline(readmeMd);
+        const tagline = clean(info.description, 200) || readmeTagline(readmeMd, name);
         const description = readmeMd ? mdToText(readmeMd).slice(0, 20000) : clean(info.description, 20000);
         const features = readmeFeatures(readmeMd);
         const version = rel ? clean(rel.tag_name || rel.name, 40).replace(/^v/i, "") : "";
