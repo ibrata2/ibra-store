@@ -202,16 +202,22 @@ function readmeImages(md, repo, branch) {
     .map((u) => /^https?:\/\//.test(u) ? u : `https://raw.githubusercontent.com/${repo}/${branch}/${u.replace(/^\.?\//, "")}`)
     .filter((u) => !/shields\.io|badge|\/badges?\/|\.svg(\?|#|$)/i.test(u));
 }
+// إزالة وسوم HTML وفك الرموز
+const stripHtml = (s) => String(s || "")
+  .replace(/<\/?[a-z][^>]*>/gi, " ")                // كل وسوم HTML
+  .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"').replace(/&#3[49];/g, "'")
+  .replace(/[ \t]{2,}/g, " ").replace(/ +\n/g, "\n").trim();
 // تحويل Markdown لنص عربي نظيف يعرضه الموقع (يحافظ على نقاط -)
 function mdToText(md) {
   return String(md || "")
     .replace(/```[\s\S]*?```/g, "")                 // بلوكات كود
     .replace(/!\[[^\]]*\]\([^)]*\)/g, "")           // صور
-    .replace(/<img[^>]*>/gi, "")                    // صور html
+    .replace(/<\/?[a-z][^>]*>/gi, " ")              // كل وسوم HTML (p, h1, div, br, b…)
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")        // روابط → النص فقط
     .replace(/^\s{0,3}#{1,6}\s*/gm, "")             // عناوين #
     .replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1").replace(/`([^`]+)`/g, "$1")
     .replace(/^\s*>\s?/gm, "")                       // اقتباس
+    .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -276,9 +282,9 @@ function normalizeApp(input, old = {}) {
   return {
     id: old.id || uid(10),
     slug: slugify(input.slug || input.name || old.slug),
-    name: clean(input.name, 120),
-    tagline: clean(input.tagline, 200),
-    description: clean(input.description, 20000),
+    name: stripHtml(clean(input.name, 120)),
+    tagline: stripHtml(clean(input.tagline, 200)),
+    description: stripHtml(clean(input.description, 20000)),
     features: (Array.isArray(input.features) ? input.features : []).map((f) => clean(f, 200)).filter(Boolean).slice(0, 40),
     category: categories[0] || "",
     categories,
@@ -317,6 +323,11 @@ function normalizeApp(input, old = {}) {
 
 const publicApp = (a) => {
   const { clicks, mirrorLog, ratingSum, ratingCount, ...rest } = a;
+  // تنظيف أي HTML تسرّب من استيراد قديم حتى ينعرض نظيف
+  rest.name = stripHtml(rest.name);
+  rest.tagline = stripHtml(rest.tagline);
+  rest.description = stripHtml(rest.description);
+  if (Array.isArray(rest.features)) rest.features = rest.features.map(stripHtml).filter(Boolean);
   return { ...rest, rating: { avg: ratingCount ? +(ratingSum / ratingCount).toFixed(1) : 0, count: ratingCount || 0 } };
 };
 const loadRaters = () => getJSON("data", "raters", {});
