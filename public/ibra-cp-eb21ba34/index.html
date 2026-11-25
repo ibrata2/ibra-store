@@ -193,6 +193,7 @@ pre.post{white-space:pre-wrap;background:var(--sunken);border:1px solid var(--li
     <h3>منشور جاهز للنشر</h3>
     <div class="mode-switch" style="display:flex;gap:6px;margin-bottom:12px" id="postTabs"></div>
     <pre class="post" id="postText"></pre>
+    <div id="postCount" class="sub" style="margin-top:8px;font-size:.82rem"></div>
     <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
       <button class="btn gold" id="postCopy">نسخ المنشور</button>
       <button class="btn ghost" id="postClose">إغلاق</button>
@@ -867,15 +868,25 @@ function buildPost(a, kind) {
   const tags = (a.keywords || []).slice(0, 12).map((k) => "#" + k.replace(/\s+/g, "_"));
   const L = [];
   if (kind === "telegram") {
-    L.push(`✨ ${a.name}${a.version ? " — الإصدار " + a.version : ""}`, "");
-    if (a.tagline) L.push(a.tagline, "");
-    if (feats.length) { L.push("🔸 المميزات:"); feats.forEach((f) => L.push("• " + f)); L.push(""); }
-    if (plats.length) L.push("💻 متوفر على: " + plats.join(" | "));
-    if (a.size) L.push("📦 الحجم: " + a.size);
-    L.push("", "⬇️ التحميل (أكثر من رابط):", url, "");
-    L.push("💡 عندك فكرة برنامج؟ اطلبه من الموقع:", location.origin + "/requests", "");
-    L.push("برمجة وتطوير ابراهيم الخزرجي", "تيليكرام: https://t.me/ibraprogram", "تيك توك: ibraprogram");
-    if (tags.length) L.push("", tags.join(" "));
+    // حد تليكرام للمنشور مع صورة = 1024 حرف، نبقى تحته
+    const MAX = 1024;
+    const head = [`✨ ${a.name}${a.version ? " — الإصدار " + a.version : ""}`, ""];
+    if (a.tagline) head.push(a.tagline, "");
+    const foot = [];
+    if (plats.length) foot.push("💻 متوفر على: " + plats.join(" | "));
+    if (a.size) foot.push("📦 الحجم: " + a.size);
+    foot.push("", "⬇️ التحميل (أكثر من رابط):", url, "", "برمجة وتطوير ابراهيم الخزرجي", "تيليكرام: https://t.me/ibraprogram", "تيك توك: ibraprogram");
+    const mid = [];
+    if (feats.length) {
+      const budget = MAX - [...head, ...foot].join("\n").length - 30;
+      let used = "🔸 المميزات:".length + 1; const picked = [];
+      for (const f of feats) { const line = "• " + f; if (used + line.length + 1 > budget) break; picked.push(line); used += line.length + 1; }
+      if (picked.length) mid.push("🔸 المميزات:", ...picked, "");
+    }
+    let out = [...head, ...mid, ...foot].join("\n").replace(/\n{3,}/g, "\n\n");
+    if (tags.length && out.length + tags.join(" ").length + 2 <= MAX) out += "\n\n" + tags.join(" ");
+    if (out.length > MAX) out = out.slice(0, MAX - 1).replace(/\s+\S*$/, "");
+    return out;
   } else if (kind === "facebook") {
     L.push(`🔥 برنامج جديد: ${a.name}`, "");
     if (a.tagline) L.push(a.tagline, "");
@@ -896,7 +907,11 @@ function showPost(a) {
   const kinds = { telegram: "تيليكرام", facebook: "فيسبوك", instagram: "انستكرام / تيك توك" };
   const draw = () => {
     $("#postTabs").innerHTML = Object.entries(kinds).map(([k, v]) => `<button class="${k === kind ? "on" : ""}" data-k="${k}" style="flex:1">${v}</button>`).join("");
-    $("#postText").textContent = buildPost(a, kind);
+    const txt = buildPost(a, kind);
+    $("#postText").textContent = txt;
+    const c = $("#postCount");
+    if (kind === "telegram") { const n = txt.length, ok = n <= 1024; c.innerHTML = `عدد الحروف: <b style="color:${ok ? "var(--ok)" : "var(--bad)"}">${n}</b> / 1024 — ${ok ? "مناسب للنشر مع صورة ✔" : "طويل — قصّره شوي"}`; }
+    else c.textContent = "";
   };
   $("#postTabs").onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) { kind = b.dataset.k; draw(); } };
   $("#postCopy").onclick = () => copy($("#postText").textContent);

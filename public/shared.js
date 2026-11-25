@@ -75,6 +75,8 @@ const IB = (() => {
   const setTheme = (t, key = "ib_theme") => { applyTheme(t); try { (t && t !== "gold") ? localStorage.setItem(key, t) : localStorage.removeItem(key); } catch {} };
   // يبني زر الثيم + القائمة ويربطهم. storageKey يفصل تفضيل اللوحة عن الموقع
   function mountThemePicker(btnEl, menuEl, { current, onPick, storageKey = "ib_theme", label } = {}) {
+    // ثيمات قديمة محفوظة (لايت أزرق…) ترجع للافتراضي الأحمر
+    if (current && !THEMES[current]) { current = "gold"; try { localStorage.removeItem(storageKey); } catch {} }
     btnEl.innerHTML = icons.palette + (label ? ` <span>${label}</span>` : "");
     const cur = () => document.documentElement.getAttribute("data-theme") || "gold";
     const draw = () => {
