@@ -245,8 +245,8 @@ body.is-home #layWrap{display:block}
 /* ===== النجوم ===== */
 .rating{display:inline-flex;align-items:center;gap:6px}
 .rating .stars{display:inline-flex;gap:1px}
-.rating .st{width:15px;height:15px;fill:var(--line2);stroke:none;flex:none}
-.rating .st.f{fill:#f1b739}
+.rating .star-ic{width:16px;height:16px;fill:var(--line2);stroke:none;flex:none;padding:0;border:none}
+.rating .star-ic.f{fill:#f1b739}
 .rating .rnum{font-size:.82rem;color:var(--muted);font-weight:700}
 .rating .rnum small{color:var(--dim);font-weight:400}
 .rating .rnum.dimtxt{color:var(--dim);font-weight:600}
@@ -256,8 +256,8 @@ body.is-home #layWrap{display:block}
 .rate-box h3 svg{width:20px;height:20px;fill:var(--gold);stroke:none}
 .rate-stars{display:inline-flex;gap:6px;margin-bottom:10px}
 .rate-stars button{background:none;border:0;cursor:pointer;padding:2px;line-height:0}
-.rate-stars .st{width:34px;height:34px;fill:var(--line2);stroke:none;transition:.12s}
-.rate-stars button.f .st{fill:#f1b739;filter:drop-shadow(0 2px 6px rgba(241,183,57,.4))}
+.rate-stars .star-ic{width:34px;height:34px;fill:var(--line2);stroke:none;transition:.12s;padding:0;border:none}
+.rate-stars button.f .star-ic{fill:#f1b739;filter:drop-shadow(0 2px 6px rgba(241,183,57,.4))}
 .rate-stars button:hover{transform:scale(1.12)}
 .rate-info{color:var(--muted);font-size:.9rem}
 .rate-info b{color:var(--gold3);font-family:var(--head)}
@@ -547,10 +547,10 @@ const platIcons = (a) => `<div class="plat-icons">${Object.keys(a.platforms || {
 
 /* ---------- الرئيسية ---------- */
 /* ===== النجوم ===== */
-const STAR = '<svg viewBox="0 0 24 24" class="st"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>';
+const STAR = '<svg viewBox="0 0 24 24" class="star-ic"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>';
 const starDisplay = (r) => {
   const avg = r?.avg || 0, c = r?.count || 0, n = Math.round(avg);
-  let s = ""; for (let i = 1; i <= 5; i++) s += STAR.replace("class=\"st\"", `class="st ${i <= n ? "f" : ""}"`);
+  let s = ""; for (let i = 1; i <= 5; i++) s += STAR.replace("class=\"star-ic\"", `class="star-ic ${i <= n ? "f" : ""}"`);
   return `<span class="rating"><span class="stars">${s}</span>${c ? `<span class="rnum">${avg.toFixed(1)} <small>(${c})</small></span>` : `<span class="rnum dimtxt">جديد</span>`}</span>`;
 };
 

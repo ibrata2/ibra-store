@@ -215,10 +215,17 @@ function mdToText(md) {
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
-// أول فقرة وصف من README (بعد العنوان)
+// أول جملة وصف حقيقية من README (نتخطى الكود والشارات والعناوين)
 function readmeTagline(md) {
   const lines = mdToText(md).split("\n").map((l) => l.trim()).filter(Boolean);
-  for (const l of lines) { if (l.length > 15 && !/^[-•*]/.test(l)) return l.slice(0, 200); }
+  for (const l of lines) {
+    if (l.length < 15) continue;
+    if (/^[-•*#>|=!]/.test(l)) continue;                                  // قوائم/عناوين/شارات
+    if (/[{}<>`]|=>|::|\/\/|\bfunction\b|\bconst\b|\breturn\b|\bimport\b|https?:\/\//.test(l)) continue; // كود/روابط
+    const letters = (l.match(/[\p{L}]/gu) || []).length;
+    if (letters < l.length * 0.5) continue;                               // أغلبه رموز
+    return l.replace(/\s+/g, " ").slice(0, 200);
+  }
   return "";
 }
 // H1 من README
