@@ -13,7 +13,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 <script>try{var t=localStorage.getItem("ib_theme");if(t&&t!=="gold")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
@@ -246,7 +246,7 @@ body.is-home #layWrap{display:block}
 .rating{display:inline-flex;align-items:center;gap:6px}
 .rating .stars{display:inline-flex;gap:1px}
 .rating .star-ic{width:16px;height:16px;fill:var(--line2);stroke:none;flex:none;padding:0;border:none}
-.rating .star-ic.f{fill:#f1b739}
+.rating .star-ic.f{fill:#ffb800}
 .rating .rnum{font-size:.82rem;color:var(--muted);font-weight:700}
 .rating .rnum small{color:var(--dim);font-weight:400}
 .rating .rnum.dimtxt{color:var(--dim);font-weight:600}
@@ -257,7 +257,7 @@ body.is-home #layWrap{display:block}
 .rate-stars{display:inline-flex;gap:6px;margin-bottom:10px}
 .rate-stars button{background:none;border:0;cursor:pointer;padding:2px;line-height:0}
 .rate-stars .star-ic{width:34px;height:34px;fill:var(--line2);stroke:none;transition:.12s;padding:0;border:none}
-.rate-stars button.f .star-ic{fill:#f1b739;filter:drop-shadow(0 2px 6px rgba(241,183,57,.4))}
+.rate-stars button.f .star-ic{fill:#ffb800;filter:drop-shadow(0 2px 6px rgba(241,183,57,.4))}
 .rate-stars button:hover{transform:scale(1.12)}
 .rate-info{color:var(--muted);font-size:.9rem}
 .rate-info b{color:var(--gold3);font-family:var(--head)}
@@ -1143,8 +1143,10 @@ async function mountTickers() {
   const recent = [...apps].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 12);
   if (!news.length && !recent.length) { host.innerHTML = ""; return; }
   const dot = "<span class='tk-dot'>•</span>";
-  const newsRow = news.length ? [0, 1].map(() => news.slice(0, 15).map((n) => `<a class="tk-item" data-news="${esc(n.slug)}">${esc(n.title)}</a>`).join(dot)).join(dot) : "<span class='tk-item'>قريباً…</span>";
-  const appsRow = recent.length ? [0, 1].map(() => recent.map((a) => { const d = (a.tagline || a.description || "").replace(/\s+/g, " ").trim().slice(0, 70); return `<a class="tk-item" data-app="${esc(a.slug)}"><bdi class="tk-name">${esc(a.name)}</bdi>${d ? ` — <span class="tk-sub">${esc(d)}</span>` : ""}</a>`; }).join(dot)).join(dot) : "<span class='tk-item'>قريباً…</span>";
+  // نكرّر العناصر حتى يمتلئ الشريط ويدور بلا توقف حتى لو العناصر قليلة
+  const fill = (arr, min = 14) => { if (!arr.length) return arr; let r = [...arr]; while (r.length < min) r = r.concat(arr); return r; };
+  const newsRow = news.length ? [0, 1].map(() => fill(news.slice(0, 15)).map((n) => `<a class="tk-item" data-news="${esc(n.slug)}">${esc(n.title)}</a>`).join(dot)).join(dot) : "<span class='tk-item'>قريباً…</span>";
+  const appsRow = recent.length ? [0, 1].map(() => fill(recent).map((a) => { const d = (a.tagline || a.description || "").replace(/\s+/g, " ").trim().slice(0, 70); return `<a class="tk-item" data-app="${esc(a.slug)}"><bdi class="tk-name">${esc(a.name)}</bdi>${d ? ` — <span class="tk-sub">${esc(d)}</span>` : ""}</a>`; }).join(dot)).join(dot) : "<span class='tk-item'>قريباً…</span>";
   host.innerHTML = `<div class="wrap"><div class="ticker-wrap">
     <div class="ticker"><span class="tk-lbl tk-news">${I.fire} أخبار</span><div class="tk-track">${newsRow}</div></div>
     <div class="ticker"><span class="tk-lbl tk-apps">${I.download} برامج جديدة</span><div class="tk-track">${appsRow}</div></div>

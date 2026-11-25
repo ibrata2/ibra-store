@@ -66,11 +66,9 @@ const IB = (() => {
   }
 
   const THEMES = {
-    gold: ["الأصلي — ذهبي أسود", "sw-gold"],
-    "red-dark": ["أحمر زجاجي أسود", "sw-red-dark"],
-    "red-light": ["أحمر زجاجي أبيض", "sw-red-light"],
-    dark: ["دارك", "sw-dark"],
-    light: ["لايت", "sw-light"],
+    gold: ["فاتح — أحمر/أبيض", "sw-gold"],
+    dark: ["داكن — أحمر/أسود", "sw-dark"],
+    auto: ["حسب النظام", "sw-auto"],
   };
   const applyTheme = (t) => { if (t && t !== "gold") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme"); };
   const savedTheme = (key = "ib_theme") => { try { return localStorage.getItem(key); } catch { return null; } };

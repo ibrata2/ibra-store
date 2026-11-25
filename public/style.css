@@ -1,28 +1,29 @@
 /* IBRA STORE — نظام ثيمات زجاجي
    الثيمات: gold(الأصلي) · red-dark · red-light · dark · light */
 :root{
-  /* الأصلي: أسود وذهبي */
-  --bg:#07070a; --bg2:#0e0e13;
-  --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
-  --line:rgba(212,175,55,.18); --line2:rgba(255,255,255,.08);
-  --gold:#d4af37; --gold2:#c9a84c; --gold3:#f3d98b; --gold-dim:rgba(212,175,55,.14);
-  --acc-hi:#fff1c4; --acc-lo:#a8831f; --on-accent:#140f00;
-  --acc-glow:rgba(212,175,55,.5); --acc-sel:#000;
-  --text:#f1ece0; --muted:#a39e92; --dim:#6e6a62;
-  --ok:#5fd19a; --warn:#f0b54a; --bad:#ff6b6b; --info:#7fb6ff;
-  --glass-grad:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
-  --glass-inset:inset 0 1px 0 rgba(255,255,255,.06);
-  --body-glow:radial-gradient(900px 500px at 85% -10%,rgba(212,175,55,.13),transparent 60%),
-    radial-gradient(700px 500px at -10% 30%,rgba(201,168,76,.07),transparent 60%),
-    radial-gradient(800px 600px at 50% 120%,rgba(212,175,55,.06),transparent 60%);
-  --grain-op:.035;
-  --input-bg:rgba(0,0,0,.35); --sunken:rgba(0,0,0,.3); --option-bg:#111;
-  --logo-grad:linear-gradient(145deg,#1b1810,#0a0a0a);
-  --nav-bg:rgba(7,7,10,.72); --menu-bg:rgba(12,12,15,.96); --toast-bg:#15130d;
-  --scroll:#2a2720;
+  /* الهوية الرسمية: أحمر وأبيض — Modern Light Glassmorphism */
+  --bg:#f7f8fa; --bg2:#ffffff;
+  --panel:rgba(255,255,255,.72); --panel2:#ffffff;
+  --line:rgba(230,0,18,.2); --line2:#e5e7eb;
+  --gold:#e60012; --gold2:#b8000e; --gold3:#c20010; --gold-dim:#fff0f1;
+  --acc-hi:#ff4d5e; --acc-lo:#b8000e; --on-accent:#ffffff;
+  --acc-glow:rgba(230,0,18,.3); --acc-sel:#ffffff;
+  --text:#18181b; --muted:#71717a; --dim:#9ca3af;
+  --ok:#16a34a; --warn:#f59e0b; --bad:#e60012; --info:#2563eb;
+  --star:#ffb800;
+  --glass-grad:linear-gradient(160deg,rgba(255,255,255,.92),rgba(255,255,255,.66));
+  --glass-inset:inset 0 1px 0 rgba(255,255,255,.75);
+  --body-glow:radial-gradient(900px 500px at 85% -10%,rgba(230,0,18,.06),transparent 60%),
+    radial-gradient(700px 500px at -10% 30%,rgba(230,0,18,.04),transparent 60%),
+    radial-gradient(800px 600px at 50% 120%,rgba(230,0,18,.035),transparent 60%);
+  --grain-op:0;
+  --input-bg:rgba(24,24,27,.03); --sunken:rgba(24,24,27,.03); --option-bg:#ffffff;
+  --logo-grad:linear-gradient(145deg,#ffffff,#ffe9eb);
+  --nav-bg:rgba(247,248,250,.85); --menu-bg:rgba(255,255,255,.98); --toast-bg:#ffffff;
+  --scroll:#e5e7eb;
   --r:18px; --r2:12px;
-  --shadow:0 20px 60px -20px rgba(0,0,0,.8);
-  --font:"Cairo",system-ui,sans-serif; --head:"Reem Kufi","Cairo",sans-serif;
+  --shadow:0 18px 50px -22px rgba(230,0,18,.2);
+  --font:"Inter","Cairo",system-ui,sans-serif; --head:"Cairo","Inter",sans-serif;
 }
 
 /* أحمر زجاجي أسود */
@@ -61,16 +62,47 @@
 
 /* دارك (رمادي محايد) */
 :root[data-theme="dark"]{
-  --bg:#0c0f14; --bg2:#141821;
-  --line:rgba(120,160,220,.2); --line2:rgba(255,255,255,.08);
-  --gold:#5f9be0; --gold2:#4f86c9; --gold3:#a8ccf2; --gold-dim:rgba(95,155,224,.15);
-  --acc-hi:#dbeafe; --acc-lo:#2f5f9e; --on-accent:#04101f; --acc-glow:rgba(95,155,224,.45); --acc-sel:#fff;
-  --text:#e8edf5; --muted:#9aa6b6; --dim:#6a7688;
-  --body-glow:radial-gradient(900px 500px at 85% -10%,rgba(95,155,224,.12),transparent 60%),
-    radial-gradient(800px 600px at 50% 120%,rgba(95,155,224,.06),transparent 60%);
-  --grain-op:.025;
-  --logo-grad:linear-gradient(145deg,#16202e,#0a0d12);
-  --nav-bg:rgba(12,15,20,.72); --menu-bg:rgba(16,20,28,.96); --toast-bg:#111722; --scroll:#273243;
+  /* الوضع الداكن: أسود وأحمر */
+  --bg:#0a0708; --bg2:#140b0d;
+  --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
+  --line:rgba(255,60,74,.26); --line2:rgba(255,255,255,.08);
+  --gold:#ff3b47; --gold2:#e60012; --gold3:#ff8a92; --gold-dim:rgba(255,60,74,.16);
+  --acc-hi:#ffd9dc; --acc-lo:#8a0710; --on-accent:#ffffff; --acc-glow:rgba(255,60,74,.5); --acc-sel:#fff;
+  --text:#f4eef0; --muted:#a99ea1; --dim:#6e6468;
+  --ok:#2fd196; --warn:#f0b54a; --bad:#ff3b47; --info:#7fb6ff;
+  --glass-grad:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+  --glass-inset:inset 0 1px 0 rgba(255,255,255,.05);
+  --body-glow:radial-gradient(900px 500px at 85% -10%,rgba(255,60,74,.16),transparent 60%),
+    radial-gradient(700px 500px at -10% 30%,rgba(150,10,20,.1),transparent 60%),
+    radial-gradient(800px 600px at 50% 120%,rgba(255,60,74,.06),transparent 60%);
+  --grain-op:.03;
+  --input-bg:rgba(0,0,0,.35); --sunken:rgba(0,0,0,.3); --option-bg:#160c0e;
+  --logo-grad:linear-gradient(145deg,#2a1012,#0a0708);
+  --nav-bg:rgba(10,7,8,.75); --menu-bg:rgba(18,10,12,.96); --toast-bg:#1a0c0e; --scroll:#3a1e22;
+  --shadow:0 20px 60px -20px rgba(0,0,0,.8);
+}
+
+/* حسب النظام: فاتح افتراضياً، ويتحوّل داكن إذا جهاز الزائر داكن */
+@media (prefers-color-scheme: dark){
+  :root[data-theme="auto"]{
+    --bg:#0a0708; --bg2:#140b0d;
+    --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
+    --line:rgba(255,60,74,.26); --line2:rgba(255,255,255,.08);
+    --gold:#ff3b47; --gold2:#e60012; --gold3:#ff8a92; --gold-dim:rgba(255,60,74,.16);
+    --acc-hi:#ffd9dc; --acc-lo:#8a0710; --on-accent:#ffffff; --acc-glow:rgba(255,60,74,.5); --acc-sel:#fff;
+    --text:#f4eef0; --muted:#a99ea1; --dim:#6e6468;
+    --ok:#2fd196; --warn:#f0b54a; --bad:#ff3b47; --info:#7fb6ff;
+    --glass-grad:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    --glass-inset:inset 0 1px 0 rgba(255,255,255,.05);
+    --body-glow:radial-gradient(900px 500px at 85% -10%,rgba(255,60,74,.16),transparent 60%),
+      radial-gradient(700px 500px at -10% 30%,rgba(150,10,20,.1),transparent 60%),
+      radial-gradient(800px 600px at 50% 120%,rgba(255,60,74,.06),transparent 60%);
+    --grain-op:.03;
+    --input-bg:rgba(0,0,0,.35); --sunken:rgba(0,0,0,.3); --option-bg:#160c0e;
+    --logo-grad:linear-gradient(145deg,#2a1012,#0a0708);
+    --nav-bg:rgba(10,7,8,.75); --menu-bg:rgba(18,10,12,.96); --toast-bg:#1a0c0e; --scroll:#3a1e22;
+    --shadow:0 20px 60px -20px rgba(0,0,0,.8);
+  }
 }
 
 /* لايت (أبيض محايد) */
@@ -190,11 +222,12 @@ select.input option{background:var(--option-bg)}
 .theme-menu button:hover{background:var(--gold-dim)}
 .theme-menu button.on{background:var(--gold-dim);color:var(--gold3)}
 .theme-menu button .sw{width:22px;height:22px;border-radius:7px;flex:none;border:1px solid rgba(128,128,128,.3)}
-.sw-gold{background:linear-gradient(135deg,#d4af37,#0a0a0a)}
+.sw-gold{background:linear-gradient(135deg,#e60012,#fff)}
 .sw-red-dark{background:linear-gradient(135deg,#e23b3b,#0a0708)}
 .sw-red-light{background:linear-gradient(135deg,#d12b2b,#fff)}
-.sw-dark{background:linear-gradient(135deg,#5f9be0,#0c0f14)}
-.sw-light{background:linear-gradient(135deg,#2563c9,#fff)}
+.sw-dark{background:linear-gradient(135deg,#ff3b47,#0a0708)}
+.sw-light{background:linear-gradient(135deg,#e60012,#fff)}
+.sw-auto{background:linear-gradient(135deg,#fff 0 50%,#140b0d 50% 100%);box-shadow:inset 0 0 0 1px #e60012}
 
 /* ---------- أزرار الفلترة ---------- */
 .filters{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;flex-wrap:wrap}
