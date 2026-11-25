@@ -34,7 +34,8 @@ jobs:
           REL=$(curl -s -H "$AUTH" -H "Accept: application/vnd.github+json" "$API")
           VER=$(echo "$REL" | jq -r '.tag_name // .name // empty')
           BODY=$(echo "$REL" | jq -r '.body // ""')
-          if [ -z "$VER" ]; then echo "ماكو إصدار (Release) بالمستودع $SRC"; echo "$REL" | head -c 400; exit 1; fi
+          # ماكو Release = مو خطأ، بس ماكو ملفات للرفع — نخرج بنجاح بدون إيميل فشل
+          if [ -z "$VER" ]; then echo "ℹ ماكو إصدار (Release) بالمستودع $SRC — أنشئ Release وأرفق ملف التثبيت ليتم الرفع تلقائياً."; exit 0; fi
           echo "الإصدار: $VER"
 
           # تثبيت rclone إذا مطلوب
